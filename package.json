@@ -1,5 +1,5 @@
 {
-  "name": "board-toolkit",
+  "name": "teacher-board-helper",
   "version": "0.1.0",
   "description": "Єдиний інструмент для інтерактивної дошки",
   "main": "dist/main/index.js",
@@ -16,11 +16,12 @@
   },
   "dependencies": {
     "electron-store": "^8.2.0",
-    "electron-updater": "^6.3.0"
+    "electron-updater": "^6.3.0",
+    "pdfjs-dist": "^5.6.205"
   },
   "build": {
-    "appId": "com.teacher.boardtoolkit",
-    "productName": "Board Toolkit",
+    "appId": "com.teacher.boardhelper",
+    "productName": "Teacher Board Helper",
     "files": [
       "dist/**/*",
       "public/**/*"

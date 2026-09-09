@@ -61,6 +61,16 @@ export function hideOverlayWindow(): void {
   overlayWindow?.hide();
 }
 
+// hide() лишає вікно живим (Electron і далі рахує його "відкритим"), тож при
+// повному завершенні застосунку його треба саме закрити, а не сховати.
+export function destroyOverlayWindow(): void {
+  globalShortcut.unregister(CLICK_THROUGH_SHORTCUT);
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.destroy();
+  }
+  overlayWindow = null;
+}
+
 export function isOverlayVisible(): boolean {
   return !!overlayWindow && !overlayWindow.isDestroyed() && overlayWindow.isVisible();
 }

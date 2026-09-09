@@ -1,11 +1,29 @@
 const contentEl = document.getElementById('content');
-const homeBtn = document.getElementById('home-btn');
+const modeNav = document.getElementById('mode-nav');
 const modeLabel = document.getElementById('current-mode-label');
-const widgetsToggle = document.getElementById('widgets-toggle');
 const fullscreenToggle = document.getElementById('fullscreen-toggle');
+const youtubeBtn = document.getElementById('nav-youtube');
+const topbarClock = document.getElementById('topbar-clock');
 
-const activeWidgets = {};
 let currentMode = null;
+let webIsYoutube = false;
+
+function isYoutubeUrl(url) {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be';
+  } catch {
+    return false;
+  }
+}
+
+function updateModeNavActive() {
+  modeNav.querySelectorAll('[data-mode]').forEach((btn) => {
+    const isWebBtn = btn.dataset.mode === 'web';
+    btn.classList.toggle('active', btn.dataset.mode === currentMode && !(isWebBtn && webIsYoutube));
+  });
+  youtubeBtn.classList.toggle('active', currentMode === 'web' && webIsYoutube);
+}
 
 function activateMode(modeId) {
   const mode = window.boardModes[modeId];
@@ -19,13 +37,29 @@ function activateMode(modeId) {
   mode.onActivate?.();
 
   currentMode = modeId;
+  if (modeId !== 'web') webIsYoutube = false;
   modeLabel.textContent = modeId === 'home' ? '' : `${mode.icon ?? ''} ${mode.label}`.trim();
-  homeBtn.classList.toggle('active', modeId === 'home');
+  updateModeNavActive();
 }
 window.activateMode = activateMode;
 
-homeBtn.addEventListener('click', () => activateMode('home'));
+// called by web-mode.js whenever the embedded page's URL changes
+window.setWebUrlForNav = function setWebUrlForNav(url) {
+  webIsYoutube = isYoutubeUrl(url);
+  updateModeNavActive();
+};
+
+modeNav.querySelectorAll('[data-mode]').forEach((btn) => {
+  btn.addEventListener('click', () => activateMode(btn.dataset.mode));
+});
 activateMode('home');
+
+// --- YouTube quick launch ---
+youtubeBtn.addEventListener('click', () => {
+  webIsYoutube = true;
+  activateMode('web');
+  window.boardApi.web.navigate('https://www.youtube.com');
+});
 
 // --- fullscreen toggle ---
 fullscreenToggle.addEventListener('click', async () => {
@@ -36,50 +70,12 @@ window.boardApi.window.isFullscreen().then((isFullscreen) => {
   fullscreenToggle.classList.toggle('active', isFullscreen);
 });
 
-// --- widgets menu ---
-widgetsToggle.addEventListener('click', () => {
-  const menu = document.createElement('div');
-  menu.className = 'widgets-menu';
-
-  Object.entries(window.boardWidgets).forEach(([id, def]) => {
-    const item = document.createElement('button');
-    item.textContent = (activeWidgets[id] ? '✅ ' : '⬜ ') + def.label;
-    item.addEventListener('click', async () => {
-      if (activeWidgets[id]) {
-        window.unmountWidget(id, activeWidgets[id]);
-        delete activeWidgets[id];
-      } else {
-        activeWidgets[id] = await window.mountWidget(id);
-      }
-      window.boardApi.store.set('widgets:active', Object.keys(activeWidgets));
-      menu.remove();
-    });
-    menu.appendChild(item);
-  });
-
-  document.body.appendChild(menu);
-  const rect = widgetsToggle.getBoundingClientRect();
-  menu.style.left = `${rect.right - menu.offsetWidth}px`;
-  menu.style.top = `${rect.bottom + 4}px`;
-
-  const closeMenu = (e) => {
-    if (!menu.contains(e.target) && e.target !== widgetsToggle) {
-      menu.remove();
-      document.removeEventListener('click', closeMenu, true);
-    }
-  };
-  setTimeout(() => document.addEventListener('click', closeMenu, true), 0);
-});
-
-// restore previously active widgets on launch
-(async () => {
-  const saved = (await window.boardApi.store.get('widgets:active')) || [];
-  for (const id of saved) {
-    if (window.boardWidgets[id]) {
-      activeWidgets[id] = await window.mountWidget(id);
-    }
-  }
-})();
+// --- topbar clock ---
+function tickClock() {
+  topbarClock.textContent = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+}
+tickClock();
+setInterval(tickClock, 1000);
 
 // --- update banner ---
 const banner = document.getElementById('update-banner');

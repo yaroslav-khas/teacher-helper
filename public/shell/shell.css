@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html, body {
   margin: 0;
   width: 100%;
@@ -21,21 +25,28 @@ body {
 .topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 8px;
+  padding: 6px 12px;
   background: #1d2026;
   border-bottom: 1px solid #2c303a;
   flex-shrink: 0;
 }
 
+.mode-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .icon-btn {
-  font-size: 22px;
+  font-size: 18px;
   background: #262a33;
   border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 8px 14px;
+  border-radius: 8px;
+  padding: 6px 10px;
   color: inherit;
   cursor: pointer;
+  line-height: 1.2;
 }
 
 .icon-btn:hover {
@@ -47,12 +58,22 @@ body {
 }
 
 .mode-label {
-  font-size: 18px;
+  font-size: 15px;
   opacity: 0.85;
 }
 
-#widgets-toggle {
+.topbar-clock {
   margin-left: auto;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+  padding: 0 4px;
+}
+
+body.web-fullscreen .topbar,
+body.web-fullscreen .web-toolbar,
+body.web-fullscreen .pdf-toolbar {
+  display: none;
 }
 
 #content {
@@ -115,6 +136,294 @@ body {
   font-size: 20px;
 }
 
+/* --- web mode --- */
+.web-mode {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.web-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #1d2026;
+  border-bottom: 1px solid #2c303a;
+  flex-shrink: 0;
+}
+
+.web-toolbar button {
+  font-size: 14px;
+  background: #262a33;
+  border: none;
+  border-radius: 6px;
+  color: inherit;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.web-toolbar button:hover {
+  background: #323744;
+}
+
+.web-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.web-toolbar button:disabled:hover {
+  background: #262a33;
+}
+
+#web-url {
+  flex: 1;
+  background: #262a33;
+  border: 1px solid #333844;
+  border-radius: 6px;
+  color: inherit;
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.web-anchor {
+  flex: 1;
+}
+
+/* --- presentation file library --- */
+.file-empty {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.big-plus-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 48px 64px;
+  background: #1d2026;
+  border: 2px dashed #3a4050;
+  border-radius: 24px;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.big-plus-tile:hover {
+  border-color: #4c8dff;
+  background: #262a33;
+}
+
+.big-plus-icon {
+  font-size: 64px;
+  line-height: 1;
+  color: #4c8dff;
+}
+
+.file-browser {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #1d2026;
+  border-bottom: 1px solid #2c303a;
+  flex-shrink: 0;
+}
+
+.crumb {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.crumb:hover {
+  background: #262a33;
+  opacity: 1;
+}
+
+.crumb-sep {
+  opacity: 0.4;
+}
+
+.crumb-change {
+  margin-left: auto;
+  background: #262a33;
+  border: none;
+  color: inherit;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.crumb-change:hover {
+  background: #323744;
+}
+
+.file-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.file-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 120px;
+  background: #1d2026;
+  border: 2px solid #2c303a;
+  border-radius: 14px;
+  color: inherit;
+  cursor: pointer;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.file-tile:hover {
+  border-color: #4c8dff;
+  background: #262a33;
+}
+
+.file-tile-icon {
+  font-size: 36px;
+}
+
+.file-tile-name {
+  font-size: 13px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.file-tile-add {
+  border-style: dashed;
+  border-color: #3a4050;
+}
+
+.file-tile-add .file-tile-icon {
+  color: #4c8dff;
+  font-size: 32px;
+}
+
+.file-tile-add:hover {
+  border-color: #4c8dff;
+}
+
+/* --- pdf viewer --- */
+.pdf-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #1d2026;
+  border-bottom: 1px solid #2c303a;
+  flex-shrink: 0;
+}
+
+.pdf-toolbar button {
+  font-size: 14px;
+  background: #262a33;
+  border: none;
+  border-radius: 6px;
+  color: inherit;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.pdf-toolbar button:hover {
+  background: #323744;
+}
+
+#pdf-fullscreen {
+  margin-left: auto;
+}
+
+.pdf-page-indicator {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+  min-width: 60px;
+  text-align: center;
+}
+
+.pdf-canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0b0c0f;
+}
+
+.pdf-canvas {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  touch-action: none;
+}
+
+/* Живе поза .pdf-toolbar навмисно — щоб завжди лишатись клікабельною,
+   навіть коли body.web-fullscreen ховає всю панель через display:none. */
+.pdf-exit-fullscreen {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 30;
+  background: rgba(20, 22, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pdf-exit-fullscreen:hover {
+  background: rgba(38, 42, 51, 0.95);
+}
+
+.pdf-fallback {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+}
+
+.pdf-fallback-actions {
+  display: flex;
+  gap: 10px;
+}
+
 /* --- widget layer --- */
 #widget-layer {
   position: absolute;
@@ -168,19 +477,21 @@ body {
 .update-banner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding: 6px 14px;
   background: #2c4a80;
   border-bottom: 1px solid #3a5c9c;
+  font-size: 14px;
 }
 
 .update-banner button {
   background: #4c8dff;
   border: none;
   color: white;
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 5px 12px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
 }
 
 #update-dismiss {

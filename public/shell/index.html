@@ -13,18 +13,25 @@
   </div>
 
   <header id="topbar" class="topbar">
-    <button id="home-btn" class="icon-btn active" title="Додому">🏠</button>
+    <nav id="mode-nav" class="mode-nav">
+      <button data-mode="home" class="icon-btn active" title="Додому">🏠</button>
+      <button data-mode="overlay" class="icon-btn" title="Малювання">✏️</button>
+      <button data-mode="web" class="icon-btn" title="Веб">🌐</button>
+      <button id="nav-youtube" class="icon-btn" title="YouTube">▶️</button>
+      <button data-mode="presentation" class="icon-btn" title="Презентація">📊</button>
+      <button data-mode="image" class="icon-btn" title="Зображення">🖼️</button>
+    </nav>
     <span id="current-mode-label" class="mode-label"></span>
-    <button id="fullscreen-toggle" class="icon-btn" title="Повний екран" style="margin-left:auto">⛶</button>
-    <button id="widgets-toggle" class="icon-btn" title="Віджети">🧩</button>
+    <span id="topbar-clock" class="topbar-clock"></span>
+    <button id="fullscreen-toggle" class="icon-btn" title="Повний екран">⛶</button>
   </header>
 
   <main id="content"></main>
 
-  <div id="widget-layer"></div>
-
-  <script src="widgets.js"></script>
   <script src="modes.js"></script>
+  <script src="web-mode.js"></script>
+  <script type="module" src="pdf-viewer.js"></script>
+  <script src="presentation-mode.js"></script>
   <script src="shell.js"></script>
 </body>
 </html>

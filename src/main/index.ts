@@ -1,8 +1,10 @@
 import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron';
 import * as path from 'path';
 import { registerStoreIpc } from './store';
-import { registerOverlayIpc, toggleOverlayWindow } from './overlayWindow';
+import { registerOverlayIpc, toggleOverlayWindow, destroyOverlayWindow } from './overlayWindow';
 import { createLauncherWindow, closeLauncherWindow, registerLauncherIpc, getDisplayBoundsUnderCursor } from './launcherWindow';
+import { registerWebViewIpc } from './webViewManager';
+import { registerPresentationIpc } from './presentationLibrary';
 import { configureUpdater } from './updater';
 
 const TOGGLE_OVERLAY_SHORTCUT = 'CommandOrControl+Alt+M';
@@ -24,9 +26,15 @@ function createShellWindow(): void {
 
   shellWindow.loadFile(path.join(__dirname, '../../public/shell/index.html'));
 
+  shellWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    console.log('[shell renderer]', level, message, `(${sourceId}:${line})`);
+  });
+
   shellWindow.on('closed', () => {
     shellWindow = null;
     closeLauncherWindow();
+    destroyOverlayWindow();
+    app.quit();
   });
 }
 
@@ -46,6 +54,8 @@ app.whenReady().then(() => {
   registerShellIpc();
   registerOverlayIpc(() => shellWindow);
   registerLauncherIpc();
+  registerWebViewIpc(() => shellWindow);
+  registerPresentationIpc(() => shellWindow);
   createShellWindow();
   createLauncherWindow();
 
@@ -56,19 +66,13 @@ app.whenReady().then(() => {
   if (shellWindow) {
     configureUpdater(shellWindow);
   }
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createShellWindow();
-      createLauncherWindow();
-    }
-  });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // Не тримаємо процес у фоні після закриття (без macOS-конвенції
+  // "додаток лишається в доку") — це вчительський інструмент, закриття
+  // головного вікна має завершувати все, включно з плаваючою кнопкою.
+  app.quit();
 });
 
 app.on('will-quit', () => {
