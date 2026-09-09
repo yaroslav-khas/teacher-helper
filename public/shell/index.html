@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>Дошка</title>
+<link rel="stylesheet" href="shell.css" />
+</head>
+<body>
+  <div id="update-banner" class="update-banner" hidden>
+    <span id="update-text"></span>
+    <button id="update-action"></button>
+    <button id="update-dismiss">Пізніше</button>
+  </div>
+
+  <header id="topbar" class="topbar">
+    <button id="home-btn" class="icon-btn active" title="Додому">🏠</button>
+    <span id="current-mode-label" class="mode-label"></span>
+    <button id="fullscreen-toggle" class="icon-btn" title="Повний екран" style="margin-left:auto">⛶</button>
+    <button id="widgets-toggle" class="icon-btn" title="Віджети">🧩</button>
+  </header>
+
+  <main id="content"></main>
+
+  <div id="widget-layer"></div>
+
+  <script src="widgets.js"></script>
+  <script src="modes.js"></script>
+  <script src="shell.js"></script>
+</body>
+</html>

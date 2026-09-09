@@ -1,0 +1,45 @@
+{
+  "name": "board-toolkit",
+  "version": "0.1.0",
+  "description": "Єдиний інструмент для інтерактивної дошки",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "npm run build && electron .",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.0"
+  },
+  "build": {
+    "appId": "com.teacher.boardtoolkit",
+    "productName": "Board Toolkit",
+    "files": [
+      "dist/**/*",
+      "public/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "PLACEHOLDER_OWNER",
+        "repo": "PLACEHOLDER_REPO"
+      }
+    ]
+  }
+}

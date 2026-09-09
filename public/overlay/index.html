@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8" />
+<title>Малювання</title>
+<link rel="stylesheet" href="overlay.css" />
+</head>
+<body>
+  <canvas id="board"></canvas>
+
+  <div id="toolbar" class="toolbar">
+    <div class="drag-handle" title="Перетягнути">⠿</div>
+    <button data-color="#ff3b30" class="swatch active" style="background:#ff3b30"></button>
+    <button data-color="#34c759" class="swatch" style="background:#34c759"></button>
+    <button data-color="#0a84ff" class="swatch" style="background:#0a84ff"></button>
+    <button data-color="#ffd60a" class="swatch" style="background:#ffd60a"></button>
+    <button data-color="#ffffff" class="swatch" style="background:#ffffff;border:1px solid #888"></button>
+    <input id="width" type="range" min="2" max="24" value="4" title="Товщина" />
+    <button id="eraser" title="Ластик">🧽</button>
+    <button id="clear" title="Очистити все">🗑️</button>
+    <button id="click-through" title="Пропускати кліки (Ctrl+Alt+D — назад)">🖱️</button>
+    <button id="close" title="Сховати малювання">✖️</button>
+  </div>
+
+  <script src="overlay.js"></script>
+</body>
+</html>
