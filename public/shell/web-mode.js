@@ -2,6 +2,7 @@
   let resizeObserver = null;
   let unsubState = null;
   let unsubFullscreen = null;
+  let escFallbackHandler = null;
   let currentUrl = '';
   let currentTitle = '';
 
@@ -145,6 +146,16 @@
         document.body.classList.toggle('web-fullscreen', isFullscreen);
         if (!isFullscreen) window.boardApi.overlay.hide();
       });
+
+      // Запасний варіант: якщо сторінка (наприклад, вихід з фулскріну
+      // відео на YouTube) не завжди надійно шле нам подію
+      // leave-html-full-screen, Esc примусово повертає нашу навігацію.
+      escFallbackHandler = (e) => {
+        if (e.key === 'Escape' && document.body.classList.contains('web-fullscreen')) {
+          document.body.classList.remove('web-fullscreen');
+        }
+      };
+      window.addEventListener('keydown', escFallbackHandler);
     },
     onDeactivate: () => {
       resizeObserver?.disconnect();
@@ -153,6 +164,10 @@
       unsubState = null;
       unsubFullscreen?.();
       unsubFullscreen = null;
+      if (escFallbackHandler) {
+        window.removeEventListener('keydown', escFallbackHandler);
+        escFallbackHandler = null;
+      }
       document.body.classList.remove('web-fullscreen');
       window.boardApi.web.hide();
     },

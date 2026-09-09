@@ -62,7 +62,13 @@ function registerShellIpc(): void {
   ipcMain.handle('shell:is-fullscreen', () => shellWindow?.isFullScreen() ?? false);
 
   ipcMain.handle('shell:minimize', () => {
-    shellWindow?.minimize();
+    if (!shellWindow) return;
+    // На Windows minimize() ігнорується, поки вікно в режимі setFullScreen —
+    // спершу треба вийти з фулскріну, і лише тоді згортати.
+    if (shellWindow.isFullScreen()) {
+      shellWindow.setFullScreen(false);
+    }
+    shellWindow.minimize();
   });
 
   ipcMain.handle('shell:quit', () => {

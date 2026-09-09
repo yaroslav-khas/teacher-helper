@@ -1,7 +1,13 @@
 (() => {
   let activeKeydownHandler = null;
+  let activeVideoEl = null;
 
   function dispose() {
+    // Перемикання на іншу вкладку через нав-панель (не через власну кнопку
+    // "← Бібліотека") інакше лишало відео програватись у фоні — DOM-елемент
+    // видаляється, але без явної паузи це не гарантовано зупиняє програвання.
+    activeVideoEl?.pause();
+    activeVideoEl = null;
     if (activeKeydownHandler) {
       window.removeEventListener('keydown', activeKeydownHandler);
       activeKeydownHandler = null;
@@ -33,6 +39,7 @@
     `;
 
     const videoEl = container.querySelector('#vid-el');
+    activeVideoEl = videoEl;
     const indicator = container.querySelector('#vid-indicator');
     const prevBtn = container.querySelector('#vid-prev');
     const nextBtn = container.querySelector('#vid-next');

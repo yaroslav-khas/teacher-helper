@@ -68,6 +68,12 @@ export function showWebView(shellWindow: BrowserWindow, bounds: Electron.Rectang
 
 export function hideWebView(shellWindow: BrowserWindow): void {
   if (webView) {
+    // Відʼєднання view від вікна не зупиняє відтворення всередині нього —
+    // відео/аудіо (наприклад, YouTube) інакше продовжує грати у фоні,
+    // непомітно для вчителя, після переходу на іншу вкладку.
+    webView.webContents
+      .executeJavaScript('document.querySelectorAll("video, audio").forEach((el) => el.pause());')
+      .catch(() => undefined);
     shellWindow.contentView.removeChildView(webView);
   }
 }
