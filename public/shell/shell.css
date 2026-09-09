@@ -95,14 +95,17 @@ body.web-fullscreen .pdf-toolbar {
 }
 
 /* --- home grid --- */
-.home-grid {
+.home-screen {
   height: 100%;
+  overflow-y: auto;
+}
+
+.home-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 24px;
-  align-content: center;
   justify-items: center;
-  padding: 48px;
+  padding: 48px 48px 24px;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -136,11 +139,116 @@ body.web-fullscreen .pdf-toolbar {
   font-size: 20px;
 }
 
+/* --- home: interactive tool link blocks --- */
+.home-links-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 48px 32px;
+}
+
+.home-links-title {
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.75;
+  margin: 0 0 12px;
+}
+
+.home-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home-link-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1d2026;
+  border: 2px solid #2c303a;
+  border-radius: 12px;
+  color: inherit;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.home-link-tile:hover,
+.home-link-tile:active {
+  border-color: #4c8dff;
+  background: #262a33;
+}
+
+.home-link-icon {
+  font-size: 20px;
+}
+
 /* --- web mode --- */
 .web-mode {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.web-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 0;
+  background: #14161a;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.web-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 150px;
+  background: #1d2026;
+  border: 1px solid #2c303a;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  color: inherit;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.web-tab:hover {
+  background: #262a33;
+}
+
+.web-tab.active {
+  background: #262a33;
+  border-color: #4c8dff;
+}
+
+.web-tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.web-tab-close {
+  opacity: 0.5;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.web-tab-close:hover {
+  opacity: 1;
+}
+
+.web-tab-add {
+  max-width: none;
+  font-weight: bold;
+  color: #4c8dff;
+  padding: 5px 10px;
+}
+
+body.web-fullscreen .web-tabs {
+  display: none;
 }
 
 .web-toolbar {
@@ -235,6 +343,44 @@ body.web-fullscreen .pdf-toolbar {
 }
 
 body.web-fullscreen .web-bookmarks {
+  display: none;
+}
+
+/* Рядок над #web-anchor, а не position:fixed поверх нього — WebContentsView
+   є нативним шаром і завжди рендериться поверх DOM хоста, тож "плаваюча"
+   кнопка виходу з z-index опинилась би під браузером і була б невидимою. */
+.web-fullscreen-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: #1d2026;
+  border-bottom: 1px solid #2c303a;
+  flex-shrink: 0;
+}
+
+.web-fullscreen-bar button {
+  font-size: 13px;
+  background: #262a33;
+  border: 1px solid #3a4050;
+  border-radius: 6px;
+  color: inherit;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.web-fullscreen-bar button:hover {
+  background: #323744;
+}
+
+#web-fullscreen-pencil {
+  font-size: 18px;
+  padding: 4px 10px;
+}
+
+/* Загальна плаваюча ✏️ (top:16/left:16) накладалась би на цю панель —
+   у веб-режимі своя копія олівця вже є всередині .web-fullscreen-bar. */
+body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   display: none;
 }
 
@@ -638,6 +784,15 @@ body.web-fullscreen .pptx-rail {
   max-height: 100%;
 }
 
+/* На відміну від .video-el (бібліотека відео, де відео лишається в
+   натуральному розмірі, лиш не перевищуючи контейнер) — гімн має заповнювати
+   весь екран: явні width/height:100% замість самих max- обмежень. */
+.anthem-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* --- widget layer --- */
 #widget-layer {
   position: absolute;
@@ -751,6 +906,41 @@ body.web-fullscreen .pptx-rail {
   background: #ff5c52;
 }
 
+.settings-btn-neutral {
+  width: 100%;
+  background: #262a33;
+  border: 1px solid #3a4050;
+  color: inherit;
+}
+
+.settings-btn-neutral:hover {
+  background: #323744;
+}
+
+.settings-row-inline {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-row-inline .settings-btn-neutral {
+  flex: 1;
+}
+
+.settings-icon-btn {
+  flex-shrink: 0;
+  width: 40px;
+  background: #262a33;
+  border: 1px solid #3a4050;
+  border-radius: 8px;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.settings-icon-btn:hover {
+  background: #323744;
+}
+
 /* --- update banner --- */
 .update-banner {
   display: flex;
@@ -775,4 +965,129 @@ body.web-fullscreen .pptx-rail {
 #update-dismiss {
   background: transparent;
   opacity: 0.8;
+}
+
+.silence-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.silence-banner-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 420px;
+  padding: 32px 40px;
+  background: #241a08;
+  border: 1px solid #6b5527;
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
+  font-size: 18px;
+  text-align: center;
+}
+
+.silence-banner-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.silence-banner-actions button {
+  background: #d99a2b;
+  color: #1d1204;
+  font-weight: 600;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#silence-dismiss {
+  background: transparent;
+  color: #f4d9a8;
+  border: 1px solid #6b5527;
+  font-weight: normal;
+}
+
+/* --- хвилина мовчання: класичний годинник --- */
+.silence-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0b0c0f;
+}
+
+.silence-clock-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.silence-clock-wrap {
+  width: min(60vh, 60vw, 480px);
+}
+
+.silence-clock-svg {
+  width: 100%;
+  display: block;
+  filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.5));
+}
+
+#hand-hour,
+#hand-min,
+#hand-sec {
+  transition: transform 0.15s cubic-bezier(0.4, 2.3, 0.6, 1);
+}
+
+.silence-caption {
+  font-size: 24px;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.silence-countdown {
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #c0392b;
+}
+
+.silence-salute {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  font-size: clamp(56px, 9vw, 130px);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
+  animation: silence-salute-in 0.5s ease-out;
+}
+
+.silence-salute div:first-child {
+  color: #4c8dff;
+}
+
+.silence-salute div:last-child {
+  color: #ffd23f;
+}
+
+@keyframes silence-salute-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

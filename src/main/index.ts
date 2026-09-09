@@ -1,16 +1,18 @@
-import { app, BrowserWindow, globalShortcut, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain } from 'electron';
 import * as path from 'path';
 import { registerStoreIpc, getStoreValue } from './store';
 import {
   registerOverlayIpc,
   toggleOverlayWindow,
   destroyOverlayWindow,
+  hideOverlayWindow,
   getDisplayBoundsUnderCursor,
   reassertOverlayVisibility,
 } from './overlayWindow';
 import { registerWebViewIpc } from './webViewManager';
 import { registerFileLibraryIpc } from './fileLibrary';
 import { configureUpdater } from './updater';
+import { startMomentOfSilenceScheduler, registerMomentOfSilenceTestIpc } from './momentOfSilence';
 
 const TOGGLE_OVERLAY_SHORTCUT = 'CommandOrControl+Alt+M';
 
@@ -52,23 +54,70 @@ function createShellWindow(): void {
 }
 
 function registerShellIpc(): void {
+  function isShellFullscreen(): boolean {
+    if (!shellWindow) return false;
+    return shellWindow.isFullScreen() || shellWindow.isSimpleFullScreen();
+  }
+
+  function setShellFullscreen(value: boolean): void {
+    if (!shellWindow) return;
+
+    if (process.platform !== 'darwin') {
+      shellWindow.setFullScreen(value);
+      return;
+    }
+
+    if (!value) {
+      // Вихід — тим самим API, яким реально зайшли в fullscreen.
+      if (shellWindow.isSimpleFullScreen()) shellWindow.setSimpleFullScreen(false);
+      if (shellWindow.isFullScreen()) shellWindow.setFullScreen(false);
+      return;
+    }
+
+    // Спершу пробуємо звичайний нативний setFullScreen() — плавніший, без
+    // ривків при ресайзі вбудованого браузера. Але в деяких оточеннях
+    // (віддалені/екран-шерені macOS-сесії без повної підтримки Mission
+    // Control) ця OS-транзиція в окремий Space мовчки не відбувається:
+    // isFullScreen() назавжди лишається false, а кнопка виглядає "мертвою".
+    // Якщо за 400мс переходу не сталось — автоматичний відкат на
+    // setSimpleFullScreen(), який розтягує вікно на весь екран без Space і
+    // працює надійно завжди, хай і з невеликим візуальним ривком.
+    shellWindow.setFullScreen(true);
+    const win = shellWindow;
+    setTimeout(() => {
+      if (!win.isDestroyed() && !win.isFullScreen() && !win.isSimpleFullScreen()) {
+        win.setSimpleFullScreen(true);
+      }
+    }, 400);
+  }
+
   ipcMain.handle('shell:toggle-fullscreen', () => {
     if (!shellWindow) return false;
-    const next = !shellWindow.isFullScreen();
-    shellWindow.setFullScreen(next);
+    const next = !isShellFullscreen();
+    setShellFullscreen(next);
     return next;
   });
 
-  ipcMain.handle('shell:is-fullscreen', () => shellWindow?.isFullScreen() ?? false);
+  ipcMain.handle('shell:is-fullscreen', () => isShellFullscreen());
 
   ipcMain.handle('shell:minimize', () => {
     if (!shellWindow) return;
-    // На Windows minimize() ігнорується, поки вікно в режимі setFullScreen —
-    // спершу треба вийти з фулскріну, і лише тоді згортати.
-    if (shellWindow.isFullScreen()) {
-      shellWindow.setFullScreen(false);
+    try {
+      // На Windows minimize() ігнорується, поки вікно в режимі setFullScreen —
+      // спершу треба вийти з фулскріну, і лише тоді згортати.
+      if (isShellFullscreen()) {
+        setShellFullscreen(false);
+      }
+      // Оверлей — окреме always-on-top вікно; саме лише згортання "Дошки"
+      // його не торкається, і він лишився б висіти зверху екрана, створюючи
+      // враження, що кнопка взагалі нічого не зробила.
+      hideOverlayWindow();
+      shellWindow.minimize();
+    } catch (err) {
+      // Тимчасова діагностика: якщо тут щось падає на Windows — побачимо це
+      // прямо у нативному вікні, без потреби в консолі/девтулзах.
+      dialog.showErrorBox('Помилка "Згорнути"', String(err));
     }
-    shellWindow.minimize();
   });
 
   ipcMain.handle('shell:quit', () => {
@@ -81,6 +130,17 @@ function registerShellIpc(): void {
 
   ipcMain.handle('shell:set-auto-launch', (_event, enabled: boolean) => {
     app.setLoginItemSettings({ openAtLogin: enabled });
+  });
+
+  ipcMain.handle('anthem:choose-file', async () => {
+    if (!shellWindow) return null;
+    const result = await dialog.showOpenDialog(shellWindow, {
+      title: 'Обрати відео гімну України',
+      properties: ['openFile'],
+      filters: [{ name: 'Відео', extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'] }],
+    });
+    if (result.canceled || result.filePaths.length === 0) return null;
+    return result.filePaths[0];
   });
 }
 
@@ -111,6 +171,8 @@ app.whenReady().then(() => {
     () => shellWindow,
   );
   createShellWindow();
+  startMomentOfSilenceScheduler(() => shellWindow);
+  registerMomentOfSilenceTestIpc(() => shellWindow);
 
   globalShortcut.register(TOGGLE_OVERLAY_SHORTCUT, () => {
     toggleOverlayWindow(getDisplayBoundsUnderCursor());

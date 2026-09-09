@@ -26,15 +26,17 @@
   },
   "build": {
     "appId": "com.teacher.boardhelper",
-    "productName": "Teacher Board Helper",
+    "productName": "Teacher Helper",
     "files": [
       "dist/**/*",
       "public/**/*"
     ],
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "build"
     },
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         "nsis",
         "portable"

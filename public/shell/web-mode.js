@@ -1,6 +1,6 @@
 (() => {
   let resizeObserver = null;
-  let unsubState = null;
+  let unsubTabs = null;
   let unsubFullscreen = null;
   let escFallbackHandler = null;
   let currentUrl = '';
@@ -10,6 +10,12 @@
   const DEFAULT_BOOKMARKS = [
     { name: 'YouTube', url: 'https://www.youtube.com' },
     { name: 'Google Диск', url: 'https://drive.google.com' },
+    { name: 'Wordwall', url: 'https://wordwall.net' },
+    { name: 'LearningApps', url: 'https://learningapps.org' },
+    { name: 'Kahoot', url: 'https://kahoot.com' },
+    { name: 'Classroomscreen', url: 'https://classroomscreen.com' },
+    { name: 'Wheel of Names', url: 'https://wheelofnames.com' },
+    { name: 'Online Stopwatch', url: 'https://www.online-stopwatch.com' },
   ];
 
   function currentBounds(anchor) {
@@ -61,9 +67,11 @@
       });
       chip.appendChild(removeBtn);
 
+      // Закладка відкривається в НОВІЙ вкладці — щоб клік не "збив" те, що
+      // вчитель уже мав відкритим в поточній.
       chip.addEventListener('pointerdown', (e) => {
         if (e.target === removeBtn) return;
-        window.boardApi.web.navigate(bm.url);
+        window.boardApi.web.newTab(bm.url);
       });
 
       barEl.appendChild(chip);
@@ -83,20 +91,65 @@
     barEl.appendChild(addBtn);
   }
 
+  function renderTabs(tabsEl, tabsData, activeId) {
+    tabsEl.innerHTML = '';
+
+    tabsData.forEach((tab) => {
+      const pill = document.createElement('button');
+      pill.className = 'web-tab' + (tab.id === activeId ? ' active' : '');
+      pill.title = tab.url;
+
+      const label = document.createElement('span');
+      label.className = 'web-tab-label';
+      label.textContent = tab.title || 'Нова вкладка';
+      pill.appendChild(label);
+
+      const closeBtn = document.createElement('span');
+      closeBtn.className = 'web-tab-close';
+      closeBtn.textContent = '✕';
+      closeBtn.title = 'Закрити вкладку';
+      closeBtn.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        window.boardApi.web.closeTab(tab.id);
+      });
+      pill.appendChild(closeBtn);
+
+      pill.addEventListener('pointerdown', (e) => {
+        if (e.target === closeBtn) return;
+        window.boardApi.web.switchTab(tab.id);
+      });
+
+      tabsEl.appendChild(pill);
+    });
+
+    const newTabBtn = document.createElement('button');
+    newTabBtn.className = 'web-tab web-tab-add';
+    newTabBtn.title = 'Нова вкладка';
+    newTabBtn.textContent = '+';
+    newTabBtn.addEventListener('pointerdown', () => window.boardApi.web.newTab());
+    tabsEl.appendChild(newTabBtn);
+  }
+
   window.boardModes.web = {
     icon: '🌐',
     label: 'Веб',
     render: (container) => {
       container.innerHTML = `
         <div class="web-mode">
+          <div id="web-tabs" class="web-tabs"></div>
           <div class="web-toolbar">
             <button id="web-back" title="Назад">←</button>
             <button id="web-forward" title="Вперед">→</button>
             <button id="web-reload" title="Оновити">⟳</button>
             <input id="web-url" type="text" placeholder="Адреса сайту або пошуковий запит…" />
             <button id="web-go">Перейти</button>
+            <button id="web-content-fullscreen" title="На весь екран (тільки сторінка)">⛶</button>
           </div>
           <div id="web-bookmarks" class="web-bookmarks"></div>
+          <div id="web-fullscreen-bar" class="web-fullscreen-bar" hidden>
+            <button id="web-fullscreen-pencil" title="Малювати поверх (Ctrl+Alt+M)">✏️</button>
+            <button id="web-exit-fullscreen">✕ Вийти з повного екрана (Esc)</button>
+          </div>
           <div id="web-anchor" class="web-anchor"></div>
         </div>
       `;
@@ -106,14 +159,40 @@
       const backBtn = container.querySelector('#web-back');
       const forwardBtn = container.querySelector('#web-forward');
       const bookmarksBar = container.querySelector('#web-bookmarks');
+      const tabsBar = container.querySelector('#web-tabs');
+      // Живе окремим рядком НАД #web-anchor (не position:fixed поверх нього) —
+      // WebContentsView є нативним шаром і завжди рендериться поверх DOM
+      // хоста, тож будь-яка "плаваюча" кнопка з CSS z-index опинилась би під
+      // браузером і була б невидимою/неклікабельною. Розмістивши кнопку
+      // виходу в звичайному потоці документа ПЕРЕД анкором, ми гарантуємо,
+      // що обчислені для WebContentsView межі (currentBounds) фізично не
+      // перекривають цю кнопку. Загальна плаваюча ✏️ (.pencil-fs-btn) теж
+      // фіксована зверху зліва — накладалась би на цю панель, тож для
+      // веб-режиму дублюємо олівець прямо тут, а плаваючу ховаємо CSS-ом.
+      const fsBar = container.querySelector('#web-fullscreen-bar');
+      const exitFsBtn = container.querySelector('#web-exit-fullscreen');
+      container.querySelector('#web-fullscreen-pencil').addEventListener('pointerdown', () => {
+        window.boardApi.overlay.toggle();
+      });
 
       renderBookmarks(bookmarksBar);
 
       window.boardApi.web.show(currentBounds(anchor), 'https://www.google.com');
 
-      resizeObserver = new ResizeObserver(() => {
-        window.boardApi.web.setBounds(currentBounds(anchor));
-      });
+      // Коалесуємо через requestAnimationFrame: під час анімованого ресайзу
+      // вікна (напр. вхід у повний екран) ResizeObserver може спрацювати
+      // по кілька разів за кадр — синхронний IPC-ресайз нативного
+      // WebContentsView на кожен такий виклик і давав видимі фрізи/ривки.
+      let boundsRaf = null;
+      function syncBoundsNextFrame() {
+        if (boundsRaf) return;
+        boundsRaf = requestAnimationFrame(() => {
+          boundsRaf = null;
+          window.boardApi.web.setBounds(currentBounds(anchor));
+        });
+      }
+
+      resizeObserver = new ResizeObserver(syncBoundsNextFrame);
       resizeObserver.observe(anchor);
 
       // pointerdown, не click — коли WebContentsView тримає фокус, перший
@@ -134,18 +213,36 @@
       forwardBtn.addEventListener('pointerdown', () => window.boardApi.web.forward());
       container.querySelector('#web-reload').addEventListener('pointerdown', () => window.boardApi.web.reload());
 
-      unsubState = window.boardApi.web.onState((state) => {
-        currentUrl = state.url;
-        currentTitle = state.title;
-        if (document.activeElement !== urlInput) urlInput.value = state.url;
-        backBtn.disabled = !state.canGoBack;
-        forwardBtn.disabled = !state.canGoForward;
+      unsubTabs = window.boardApi.web.onTabsChanged(({ tabs, activeId }) => {
+        renderTabs(tabsBar, tabs, activeId);
+
+        const active = tabs.find((t) => t.id === activeId);
+        if (!active) return;
+        currentUrl = active.url;
+        currentTitle = active.title;
+        if (document.activeElement !== urlInput) urlInput.value = active.url;
+        backBtn.disabled = !active.canGoBack;
+        forwardBtn.disabled = !active.canGoForward;
       });
 
       unsubFullscreen = window.boardApi.web.onFullscreenChange((isFullscreen) => {
         document.body.classList.toggle('web-fullscreen', isFullscreen);
+        fsBar.hidden = !isFullscreen;
         if (!isFullscreen) window.boardApi.overlay.hide();
+        syncBoundsNextFrame();
       });
+
+      // Кнопка "лише сторінка на весь екран": ховає нашу навігацію/вкладки,
+      // НЕ чіпаючи стан вікна самої програми (це окрема річ — ⛶ у топбарі).
+      function toggleContentFullscreen() {
+        const isFs = !document.body.classList.contains('web-fullscreen');
+        document.body.classList.toggle('web-fullscreen', isFs);
+        fsBar.hidden = !isFs;
+        if (!isFs) window.boardApi.overlay.hide();
+        syncBoundsNextFrame();
+      }
+      container.querySelector('#web-content-fullscreen').addEventListener('pointerdown', toggleContentFullscreen);
+      exitFsBtn.addEventListener('pointerdown', toggleContentFullscreen);
 
       // Запасний варіант: якщо сторінка (наприклад, вихід з фулскріну
       // відео на YouTube) не завжди надійно шле нам подію
@@ -153,6 +250,8 @@
       escFallbackHandler = (e) => {
         if (e.key === 'Escape' && document.body.classList.contains('web-fullscreen')) {
           document.body.classList.remove('web-fullscreen');
+          fsBar.hidden = true;
+          syncBoundsNextFrame();
         }
       };
       window.addEventListener('keydown', escFallbackHandler);
@@ -160,8 +259,8 @@
     onDeactivate: () => {
       resizeObserver?.disconnect();
       resizeObserver = null;
-      unsubState?.();
-      unsubState = null;
+      unsubTabs?.();
+      unsubTabs = null;
       unsubFullscreen?.();
       unsubFullscreen = null;
       if (escFallbackHandler) {
@@ -171,5 +270,12 @@
       document.body.classList.remove('web-fullscreen');
       window.boardApi.web.hide();
     },
+  };
+
+  // Викликається з головного екрана: перемикає на "Веб" і відкриває
+  // посилання в новій вкладці, не чіпаючи те, що вже було відкрите.
+  window.openWebLinkInNewTab = function openWebLinkInNewTab(url) {
+    window.activateMode('web');
+    window.boardApi.web.newTab(url);
   };
 })();

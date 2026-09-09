@@ -33,6 +33,7 @@ function activateMode(modeId) {
   updateModeNavActive();
 }
 window.activateMode = activateMode;
+window.currentBoardMode = () => currentMode;
 
 // Нав-кнопки слухають pointerdown, а не click: коли вбудований браузер
 // (WebContentsView) тримає фокус (наприклад, автофокус поля пошуку на
@@ -99,6 +100,70 @@ document.getElementById('settings-minimize').addEventListener('pointerdown', () 
 
 document.getElementById('settings-quit').addEventListener('pointerdown', () => {
   window.boardApi.window.quit();
+});
+
+document.getElementById('settings-silence-now').addEventListener('pointerdown', () => {
+  settingsMenu.hidden = true;
+  // Ручний запуск на випадок, якщо треба провести хвилину мовчання не рівно
+  // о 9:00 (інший розклад дзвінків тощо) — той самий шлях, що й щоденний
+  // автотригер: сповіщення + банер, а не пряме відкриття таймера.
+  window.boardApi.momentOfSilence.simulate();
+});
+
+document.getElementById('settings-anthem-now').addEventListener('pointerdown', () => {
+  settingsMenu.hidden = true;
+  window.triggerAnthem();
+});
+
+document.getElementById('settings-anthem-gear').addEventListener('pointerdown', async (e) => {
+  e.stopPropagation();
+  const chosen = await window.boardApi.anthem.chooseFile();
+  if (chosen) await window.boardApi.store.set('anthem:path', chosen);
+});
+
+// --- хвилина мовчання (щодня о 9:00) ---
+const silenceBanner = document.getElementById('silence-banner');
+
+let silenceAlertCtx = null;
+// Сигнал при появі попапу — синтезований, без зовнішнього аудіофайлу, як і
+// клац секундної стрілки в самому таймері. 4 ноти й помітно вища гучність
+// (0.6 замість 0.2), щоб точно було чутно в класі.
+function playSilenceAlert() {
+  try {
+    silenceAlertCtx = silenceAlertCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (silenceAlertCtx.state === 'suspended') silenceAlertCtx.resume();
+    const now = silenceAlertCtx.currentTime;
+    [880, 1108, 880, 1108].forEach((freq, i) => {
+      const osc = silenceAlertCtx.createOscillator();
+      const gain = silenceAlertCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const start = now + i * 0.18;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.6, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.17);
+      osc.connect(gain);
+      gain.connect(silenceAlertCtx.destination);
+      osc.start(start);
+      osc.stop(start + 0.18);
+    });
+  } catch {
+    // Web Audio недоступний — тиша не критична.
+  }
+}
+
+document.getElementById('silence-open').addEventListener('pointerdown', () => {
+  silenceBanner.hidden = true;
+  window.triggerMomentOfSilence();
+});
+
+document.getElementById('silence-dismiss').addEventListener('pointerdown', () => {
+  silenceBanner.hidden = true;
+});
+
+window.boardApi.momentOfSilence.onTrigger(() => {
+  silenceBanner.hidden = false;
+  playSilenceAlert();
 });
 
 // --- topbar clock ---

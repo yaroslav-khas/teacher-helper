@@ -1,8 +1,49 @@
+const STUDENT_TOOLS = [
+  { icon: '🧩', label: 'Wordwall', url: 'https://wordwall.net' },
+  { icon: '📘', label: 'LearningApps', url: 'https://learningapps.org' },
+  { icon: '🎮', label: 'Kahoot', url: 'https://kahoot.com' },
+  { icon: '📝', label: 'Quizlet', url: 'https://quizlet.com' },
+  { icon: '🧠', label: 'Blooket', url: 'https://www.blooket.com' },
+];
+
+const BOARD_TOOLS = [
+  { icon: '🖥️', label: 'Classroomscreen', url: 'https://classroomscreen.com' },
+  { icon: '🎡', label: 'Wheel of Names', url: 'https://wheelofnames.com' },
+  { icon: '⏱️', label: 'Таймер', url: 'https://www.online-stopwatch.com' },
+  { icon: '🎲', label: 'Random Name Picker', url: 'https://www.classtools.net/random-name-picker/' },
+  { icon: '📌', label: 'Padlet', url: 'https://padlet.com' },
+];
+
+function renderLinkRow(title, items) {
+  const section = document.createElement('section');
+  section.className = 'home-links-section';
+
+  const heading = document.createElement('h2');
+  heading.className = 'home-links-title';
+  heading.textContent = title;
+  section.appendChild(heading);
+
+  const row = document.createElement('div');
+  row.className = 'home-links-row';
+
+  items.forEach((item) => {
+    const btn = document.createElement('button');
+    btn.className = 'home-link-tile';
+    btn.innerHTML = `<span class="home-link-icon">${item.icon}</span><span class="home-link-label">${item.label}</span>`;
+    btn.addEventListener('pointerdown', () => window.openWebLinkInNewTab(item.url));
+    row.appendChild(btn);
+  });
+
+  section.appendChild(row);
+  return section;
+}
+
 window.boardModes = {
   home: {
     label: '',
     render: (container) => {
       container.innerHTML = '';
+
       const grid = document.createElement('div');
       grid.className = 'home-grid';
 
@@ -21,7 +62,12 @@ window.boardModes = {
         grid.appendChild(btn);
       });
 
-      container.appendChild(grid);
+      const scroller = document.createElement('div');
+      scroller.className = 'home-screen';
+      scroller.appendChild(grid);
+      scroller.appendChild(renderLinkRow('Інтерактивні тулзи для учнів', STUDENT_TOOLS));
+      scroller.appendChild(renderLinkRow('Інструменти для роботи з дошкою', BOARD_TOOLS));
+      container.appendChild(scroller);
     },
   },
 

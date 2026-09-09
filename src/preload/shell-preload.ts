@@ -22,10 +22,13 @@ contextBridge.exposeInMainWorld('boardApi', {
     back: () => ipcRenderer.send('web:back'),
     forward: () => ipcRenderer.send('web:forward'),
     reload: () => ipcRenderer.send('web:reload'),
-    onState: (callback: (state: unknown) => void) => {
-      const listener = (_event: unknown, state: unknown) => callback(state);
-      ipcRenderer.on('web:state', listener);
-      return () => ipcRenderer.removeListener('web:state', listener);
+    newTab: (url?: string) => ipcRenderer.send('web:new-tab', url),
+    switchTab: (id: string) => ipcRenderer.send('web:switch-tab', id),
+    closeTab: (id: string) => ipcRenderer.send('web:close-tab', id),
+    onTabsChanged: (callback: (payload: unknown) => void) => {
+      const listener = (_event: unknown, payload: unknown) => callback(payload);
+      ipcRenderer.on('web:tabs-changed', listener);
+      return () => ipcRenderer.removeListener('web:tabs-changed', listener);
     },
     onFullscreenChange: (callback: (isFullscreen: boolean) => void) => {
       const listener = (_event: unknown, isFullscreen: boolean) => callback(isFullscreen);
@@ -58,6 +61,17 @@ contextBridge.exposeInMainWorld('boardApi', {
   store: {
     get: (key: string) => ipcRenderer.invoke('store:get', key),
     set: (key: string, value: unknown) => ipcRenderer.invoke('store:set', key, value),
+  },
+  anthem: {
+    chooseFile: () => ipcRenderer.invoke('anthem:choose-file'),
+  },
+  momentOfSilence: {
+    onTrigger: (callback: () => void) => {
+      const listener = () => callback();
+      ipcRenderer.on('moment-of-silence:trigger', listener);
+      return () => ipcRenderer.removeListener('moment-of-silence:trigger', listener);
+    },
+    simulate: () => ipcRenderer.invoke('moment-of-silence:simulate'),
   },
   updater: {
     download: () => ipcRenderer.invoke('updater:download'),

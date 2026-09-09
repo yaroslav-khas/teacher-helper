@@ -12,6 +12,16 @@
     <button id="update-dismiss">Пізніше</button>
   </div>
 
+  <div id="silence-banner" class="silence-banner" hidden>
+    <div class="silence-banner-card">
+      <span>🕯️ Розпочалася хвилина мовчання. Відкрити таймер?</span>
+      <div class="silence-banner-actions">
+        <button id="silence-open">Відкрити таймер</button>
+        <button id="silence-dismiss">Пізніше</button>
+      </div>
+    </div>
+  </div>
+
   <header id="topbar" class="topbar">
     <nav id="mode-nav" class="mode-nav">
       <button data-mode="home" class="icon-btn active" title="Додому">🏠</button>
@@ -37,6 +47,11 @@
       <input type="checkbox" id="settings-auto-launch" />
       Запускати автоматично при вмиканні комп'ютера
     </label>
+    <button id="settings-silence-now" class="settings-btn settings-btn-neutral">🕯️ Хвилина мовчання</button>
+    <div class="settings-row-inline">
+      <button id="settings-anthem-now" class="settings-btn settings-btn-neutral">🇺🇦 Гімн України</button>
+      <button id="settings-anthem-gear" class="settings-icon-btn" title="Обрати відеофайл гімну">⚙️</button>
+    </div>
     <div class="settings-actions">
       <button id="settings-minimize" class="settings-btn settings-btn-blue">Згорнути</button>
       <button id="settings-quit" class="settings-btn settings-btn-red">Вихід</button>
@@ -51,6 +66,8 @@
 
   <script src="modes.js"></script>
   <script src="whiteboard-mode.js"></script>
+  <script src="moment-of-silence.js"></script>
+  <script src="anthem.js"></script>
   <script src="web-mode.js"></script>
   <script src="file-library.js"></script>
   <script type="module" src="pptx-mode.js"></script>

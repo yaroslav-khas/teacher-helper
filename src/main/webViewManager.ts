@@ -1,36 +1,48 @@
 import { BrowserWindow, WebContentsView, ipcMain } from 'electron';
+import { randomUUID } from 'crypto';
 
-let webView: WebContentsView | null = null;
-let wired = false;
-
-function ensureWebView(): WebContentsView {
-  if (!webView) {
-    webView = new WebContentsView({
-      webPreferences: {
-        contextIsolation: true,
-        sandbox: true,
-        nodeIntegration: false,
-      },
-    });
-  }
-  return webView;
+interface Tab {
+  id: string;
+  view: WebContentsView;
 }
 
-function sendState(shellWindow: BrowserWindow): void {
-  if (!webView) return;
-  const wc = webView.webContents;
-  shellWindow.webContents.send('web:state', {
+const tabs: Tab[] = [];
+let activeTabId: string | null = null;
+let lastBounds: Electron.Rectangle | null = null;
+
+function findTab(id: string | null): Tab | undefined {
+  return tabs.find((t) => t.id === id);
+}
+
+function tabSummary(tab: Tab) {
+  const wc = tab.view.webContents;
+  return {
+    id: tab.id,
     url: wc.getURL(),
-    title: wc.getTitle(),
+    title: wc.getTitle() || wc.getURL() || 'Нова вкладка',
     canGoBack: wc.canGoBack(),
     canGoForward: wc.canGoForward(),
     loading: wc.isLoading(),
+  };
+}
+
+function sendTabsChanged(shellWindow: BrowserWindow): void {
+  if (shellWindow.isDestroyed()) return;
+  shellWindow.webContents.send('web:tabs-changed', {
+    tabs: tabs.map(tabSummary),
+    activeId: activeTabId,
   });
 }
 
-function wireEvents(shellWindow: BrowserWindow, view: WebContentsView): void {
-  const wc = view.webContents;
-  const emit = () => sendState(shellWindow);
+function pauseMedia(tab: Tab): void {
+  tab.view.webContents
+    .executeJavaScript('document.querySelectorAll("video, audio").forEach((el) => el.pause());')
+    .catch(() => undefined);
+}
+
+function wireTabEvents(shellWindow: BrowserWindow, tab: Tab): void {
+  const wc = tab.view.webContents;
+  const emit = () => sendTabsChanged(shellWindow);
   wc.on('did-navigate', emit);
   wc.on('did-navigate-in-page', emit);
   wc.on('did-start-loading', emit);
@@ -48,38 +60,51 @@ function wireEvents(shellWindow: BrowserWindow, view: WebContentsView): void {
   });
 }
 
+function createTab(shellWindow: BrowserWindow, url?: string): Tab {
+  const view = new WebContentsView({
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+      nodeIntegration: false,
+    },
+  });
+  const tab: Tab = { id: randomUUID(), view };
+  tabs.push(tab);
+  wireTabEvents(shellWindow, tab);
+  view.webContents.loadURL(url || 'https://www.google.com');
+  return tab;
+}
+
+function attachActiveTab(shellWindow: BrowserWindow): void {
+  const active = findTab(activeTabId);
+  if (!active || !lastBounds) return;
+  shellWindow.contentView.addChildView(active.view);
+  active.view.setBounds(lastBounds);
+}
+
+function detachTab(shellWindow: BrowserWindow, tab: Tab): void {
+  pauseMedia(tab);
+  shellWindow.contentView.removeChildView(tab.view);
+}
+
 export function showWebView(shellWindow: BrowserWindow, bounds: Electron.Rectangle, url?: string): void {
-  const view = ensureWebView();
-  if (!wired) {
-    wireEvents(shellWindow, view);
-    wired = true;
+  lastBounds = bounds;
+  if (tabs.length === 0) {
+    activeTabId = createTab(shellWindow, url).id;
   }
-  shellWindow.contentView.addChildView(view);
-  view.setBounds(bounds);
-  if (url && !view.webContents.getURL()) {
-    view.webContents.loadURL(url);
-  }
-  // Якщо view вже мав завантажену сторінку (повторний вхід у режим "Веб"),
-  // жодна навігаційна подія тут не спрацює — без цього виклику свіжа панель
-  // (адресний рядок, підсвітка вкладки, ←/→) лишається порожньою й
-  // застарілою, хоч сам контент насправді на місці.
-  sendState(shellWindow);
+  attachActiveTab(shellWindow);
+  sendTabsChanged(shellWindow);
 }
 
 export function hideWebView(shellWindow: BrowserWindow): void {
-  if (webView) {
-    // Відʼєднання view від вікна не зупиняє відтворення всередині нього —
-    // відео/аудіо (наприклад, YouTube) інакше продовжує грати у фоні,
-    // непомітно для вчителя, після переходу на іншу вкладку.
-    webView.webContents
-      .executeJavaScript('document.querySelectorAll("video, audio").forEach((el) => el.pause());')
-      .catch(() => undefined);
-    shellWindow.contentView.removeChildView(webView);
-  }
+  const active = findTab(activeTabId);
+  if (active) detachTab(shellWindow, active);
 }
 
 export function setWebViewBounds(bounds: Electron.Rectangle): void {
-  webView?.setBounds(bounds);
+  lastBounds = bounds;
+  const active = findTab(activeTabId);
+  active?.view.setBounds(bounds);
 }
 
 function normalizeUrl(input: string): string {
@@ -107,18 +132,65 @@ export function registerWebViewIpc(getShellWindow: () => BrowserWindow | null): 
   });
 
   ipcMain.on('web:navigate', (_event, input: string) => {
-    ensureWebView().webContents.loadURL(normalizeUrl(input));
+    const active = findTab(activeTabId);
+    active?.view.webContents.loadURL(normalizeUrl(input));
   });
 
   ipcMain.on('web:back', () => {
-    if (webView?.webContents.canGoBack()) webView.webContents.goBack();
+    const active = findTab(activeTabId);
+    if (active?.view.webContents.canGoBack()) active.view.webContents.goBack();
   });
 
   ipcMain.on('web:forward', () => {
-    if (webView?.webContents.canGoForward()) webView.webContents.goForward();
+    const active = findTab(activeTabId);
+    if (active?.view.webContents.canGoForward()) active.view.webContents.goForward();
   });
 
   ipcMain.on('web:reload', () => {
-    webView?.webContents.reload();
+    findTab(activeTabId)?.view.webContents.reload();
+  });
+
+  // Відкриває посилання (із закладок чи з головного екрана) у НОВІЙ вкладці,
+  // а не поверх поточної — щоб клік по чомусь на дошці випадково не "збив"
+  // те, що вчитель уже мав відкритим.
+  ipcMain.on('web:new-tab', (_event, url?: string) => {
+    const shellWindow = getShellWindow();
+    if (!shellWindow) return;
+    const prevActive = findTab(activeTabId);
+    if (prevActive) detachTab(shellWindow, prevActive);
+    activeTabId = createTab(shellWindow, url).id;
+    attachActiveTab(shellWindow);
+    sendTabsChanged(shellWindow);
+  });
+
+  ipcMain.on('web:switch-tab', (_event, id: string) => {
+    const shellWindow = getShellWindow();
+    if (!shellWindow || id === activeTabId) return;
+    const prevActive = findTab(activeTabId);
+    if (prevActive) detachTab(shellWindow, prevActive);
+    activeTabId = id;
+    attachActiveTab(shellWindow);
+    sendTabsChanged(shellWindow);
+  });
+
+  ipcMain.on('web:close-tab', (_event, id: string) => {
+    const shellWindow = getShellWindow();
+    if (!shellWindow) return;
+    const index = tabs.findIndex((t) => t.id === id);
+    if (index === -1) return;
+
+    const [closed] = tabs.splice(index, 1);
+    const wasActive = closed.id === activeTabId;
+    // WebContentsView (на відміну від старого BrowserView) не має власного
+    // destroy() — досить прибрати з вікна й позбутись останнього посилання,
+    // Electron сам звільнить ресурси при збиранні сміття.
+    shellWindow.contentView.removeChildView(closed.view);
+
+    if (wasActive) {
+      const fallback = tabs[index] ?? tabs[index - 1] ?? null;
+      activeTabId = fallback ? fallback.id : createTab(shellWindow).id;
+      attachActiveTab(shellWindow);
+    }
+    sendTabsChanged(shellWindow);
   });
 }
