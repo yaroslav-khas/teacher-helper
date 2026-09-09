@@ -9,3 +9,9 @@ export function registerStoreIpc(): void {
     store.set(key, value);
   });
 }
+
+// Пряме читання зі сховища в main-процесі (наприклад, "завжди на весь екран"
+// треба знати ще до створення вікна, до будь-якого IPC з рендерером).
+export function getStoreValue<T>(key: string): T | undefined {
+  return store.get(key) as T | undefined;
+}

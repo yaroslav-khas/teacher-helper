@@ -68,9 +68,12 @@ document.getElementById('eraser').addEventListener('click', (e) => {
   e.currentTarget.classList.toggle('active', erasing);
 });
 
-document.getElementById('clear').addEventListener('click', () => {
+function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-});
+}
+
+document.getElementById('clear').addEventListener('click', clearCanvas);
+window.overlayApi.onClear(clearCanvas);
 
 document.getElementById('close').addEventListener('click', () => {
   window.overlayApi.close();

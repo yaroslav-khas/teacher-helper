@@ -4,10 +4,15 @@ contextBridge.exposeInMainWorld('boardApi', {
   window: {
     toggleFullscreen: () => ipcRenderer.invoke('shell:toggle-fullscreen'),
     isFullscreen: () => ipcRenderer.invoke('shell:is-fullscreen'),
+    minimize: () => ipcRenderer.invoke('shell:minimize'),
+    quit: () => ipcRenderer.invoke('shell:quit'),
+    getAutoLaunch: () => ipcRenderer.invoke('shell:get-auto-launch'),
+    setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('shell:set-auto-launch', enabled),
   },
   overlay: {
     show: () => ipcRenderer.invoke('overlay:show'),
     hide: () => ipcRenderer.invoke('overlay:hide'),
+    toggle: () => ipcRenderer.invoke('overlay:toggle'),
   },
   web: {
     show: (bounds: Electron.Rectangle, url?: string) => ipcRenderer.send('web:show', bounds, url),
@@ -34,8 +39,21 @@ contextBridge.exposeInMainWorld('boardApi', {
     list: (folderPath: string) => ipcRenderer.invoke('presentation:list', folderPath),
     addFile: (folderPath: string) => ipcRenderer.invoke('presentation:add-file', folderPath),
     openFile: (filePath: string) => ipcRenderer.invoke('presentation:open-file', filePath),
-    openAsPdf: (filePath: string) => ipcRenderer.invoke('presentation:open-as-pdf', filePath),
-    readPdfBytes: (pdfPath: string) => ipcRenderer.invoke('presentation:read-pdf-bytes', pdfPath),
+  },
+  image: {
+    getRoot: () => ipcRenderer.invoke('image:get-root'),
+    chooseRoot: () => ipcRenderer.invoke('image:choose-root'),
+    list: (folderPath: string) => ipcRenderer.invoke('image:list', folderPath),
+    addFile: (folderPath: string) => ipcRenderer.invoke('image:add-file', folderPath),
+    openFile: (filePath: string) => ipcRenderer.invoke('image:open-file', filePath),
+    readFileBytes: (filePath: string) => ipcRenderer.invoke('image:read-file-bytes', filePath),
+  },
+  media: {
+    getRoot: () => ipcRenderer.invoke('media:get-root'),
+    chooseRoot: () => ipcRenderer.invoke('media:choose-root'),
+    list: (folderPath: string) => ipcRenderer.invoke('media:list', folderPath),
+    addFile: (folderPath: string) => ipcRenderer.invoke('media:add-file', folderPath),
+    openFile: (filePath: string) => ipcRenderer.invoke('media:open-file', filePath),
   },
   store: {
     get: (key: string) => ipcRenderer.invoke('store:get', key),

@@ -46,7 +46,7 @@ function renderFallback(container, error, filePath, onBack) {
   const openBtn = document.createElement('button');
   openBtn.className = 'icon-btn';
   openBtn.textContent = 'Відкрити зовні';
-  openBtn.addEventListener('click', () => window.boardApi.presentation.openFile(filePath));
+  openBtn.addEventListener('click', () => window.boardApi.image.openFile(filePath));
 
   row.appendChild(backBtn);
   row.appendChild(openBtn);
@@ -55,15 +55,15 @@ function renderFallback(container, error, filePath, onBack) {
 
 window.renderPdfViewer = async function renderPdfViewer(container, filePath, onBack) {
   disposeViewer();
-  container.innerHTML = '<div class="placeholder">Підготовка перегляду…</div>';
+  container.innerHTML = '<div class="placeholder">Завантаження…</div>';
 
-  const result = await window.boardApi.presentation.openAsPdf(filePath);
-  if (!result.ok) {
-    renderFallback(container, result.error, filePath, onBack);
+  let bytes;
+  try {
+    bytes = await window.boardApi.image.readFileBytes(filePath);
+  } catch (err) {
+    renderFallback(container, err?.message ?? String(err), filePath, onBack);
     return;
   }
-
-  const bytes = await window.boardApi.presentation.readPdfBytes(result.pdfPath);
   const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
 
   let currentPage = 1;
@@ -92,14 +92,30 @@ window.renderPdfViewer = async function renderPdfViewer(container, filePath, onB
   const wrap = container.querySelector('.pdf-canvas-wrap');
   const exitFsBtn = container.querySelector('#pdf-exit-fullscreen');
 
-  // pdf.js кидає помилку, якщо запустити новий render() поки попередній ще
-  // не завершився (саме так і виникала "перевернута" картинка — ResizeObserver
-  // і клік по fullscreen одночасно малювали в один canvas). Скасовуємо
-  // попередній рендер-таск перед стартом нового.
+  // pdf.js кидає помилку, якщо запустити новий render() поки canvas ще
+  // зайнятий попереднім — cancel() лише ЗАПЛАНОВУЄ скасування, воно не
+  // миттєве. Тому чекаємо, поки попередній таск дійсно завершиться (його
+  // promise відхилиться), і лише тоді займаємо canvas знову. Токен-покоління
+  // додатково відкидає застарілі виклики, якщо їх встигло накопичитись
+  // кілька (швидке клацання/ресайз/fullscreen одночасно).
+  let renderGeneration = 0;
+
   async function renderPage(num) {
-    renderTask?.cancel();
+    const myGeneration = ++renderGeneration;
+
+    if (renderTask) {
+      renderTask.cancel();
+      try {
+        await renderTask.promise;
+      } catch {
+        // очікуване відхилення через скасування
+      }
+    }
+    if (myGeneration !== renderGeneration) return;
 
     const page = await pdf.getPage(num);
+    if (myGeneration !== renderGeneration) return;
+
     const wrapRect = wrap.getBoundingClientRect();
     if (wrapRect.width < 1 || wrapRect.height < 1) return;
 
@@ -120,6 +136,7 @@ window.renderPdfViewer = async function renderPdfViewer(container, filePath, onB
       if (err?.name !== 'RenderingCancelledException') throw err;
       return;
     }
+    if (myGeneration !== renderGeneration) return;
     pageIndicator.textContent = `${num} / ${totalPages}`;
   }
 
@@ -143,6 +160,7 @@ window.renderPdfViewer = async function renderPdfViewer(container, filePath, onB
     isFullscreenActive = await window.boardApi.window.toggleFullscreen();
     document.body.classList.toggle('web-fullscreen', isFullscreenActive);
     exitFsBtn.hidden = !isFullscreenActive;
+    if (!isFullscreenActive) window.boardApi.overlay.hide();
     requestAnimationFrame(() => renderPage(currentPage));
   }
 

@@ -15,23 +15,51 @@
   <header id="topbar" class="topbar">
     <nav id="mode-nav" class="mode-nav">
       <button data-mode="home" class="icon-btn active" title="Додому">🏠</button>
-      <button data-mode="overlay" class="icon-btn" title="Малювання">✏️</button>
+      <button id="pencil-toggle" class="icon-btn" title="Малювати поверх (Ctrl+Alt+M)">✏️</button>
+      <button data-mode="whiteboard" class="icon-btn" title="Чистий аркуш">🗒️</button>
       <button data-mode="web" class="icon-btn" title="Веб">🌐</button>
-      <button id="nav-youtube" class="icon-btn" title="YouTube">▶️</button>
+      <button data-mode="media" class="icon-btn" title="Медіа (відео на комп'ютері)">▶️</button>
       <button data-mode="presentation" class="icon-btn" title="Презентація">📊</button>
       <button data-mode="image" class="icon-btn" title="Зображення">🖼️</button>
     </nav>
     <span id="current-mode-label" class="mode-label"></span>
     <span id="topbar-clock" class="topbar-clock"></span>
+    <button id="settings-toggle" class="icon-btn" title="Налаштування">⚙️</button>
     <button id="fullscreen-toggle" class="icon-btn" title="Повний екран">⛶</button>
   </header>
 
+  <div id="settings-menu" class="settings-menu" hidden>
+    <label class="settings-row">
+      <input type="checkbox" id="settings-always-fullscreen" />
+      Завжди відкривати на весь екран
+    </label>
+    <label class="settings-row">
+      <input type="checkbox" id="settings-auto-launch" />
+      Запускати автоматично при вмиканні комп'ютера
+    </label>
+    <div class="settings-actions">
+      <button id="settings-minimize" class="settings-btn settings-btn-blue">Згорнути</button>
+      <button id="settings-quit" class="settings-btn settings-btn-red">Вихід</button>
+    </div>
+  </div>
+
   <main id="content"></main>
 
+  <!-- Живе поза #topbar навмисно — лишається доступною навіть коли
+       body.web-fullscreen ховає всю навігацію (PDF/pptx/зображення на весь екран). -->
+  <button id="pencil-toggle-fs" class="pencil-fs-btn" title="Малювати поверх (Ctrl+Alt+M)">✏️</button>
+
   <script src="modes.js"></script>
+  <script src="whiteboard-mode.js"></script>
   <script src="web-mode.js"></script>
-  <script type="module" src="pdf-viewer.js"></script>
+  <script src="file-library.js"></script>
+  <script type="module" src="pptx-mode.js"></script>
   <script src="presentation-mode.js"></script>
+  <script type="module" src="pdf-viewer.js"></script>
+  <script src="image-viewer.js"></script>
+  <script src="image-mode.js"></script>
+  <script src="video-viewer.js"></script>
+  <script src="media-mode.js"></script>
   <script src="shell.js"></script>
 </body>
 </html>

@@ -59,6 +59,11 @@ export function showWebView(shellWindow: BrowserWindow, bounds: Electron.Rectang
   if (url && !view.webContents.getURL()) {
     view.webContents.loadURL(url);
   }
+  // Якщо view вже мав завантажену сторінку (повторний вхід у режим "Веб"),
+  // жодна навігаційна подія тут не спрацює — без цього виклику свіжа панель
+  // (адресний рядок, підсвітка вкладки, ←/→) лишається порожньою й
+  // застарілою, хоч сам контент насправді на місці.
+  sendState(shellWindow);
 }
 
 export function hideWebView(shellWindow: BrowserWindow): void {

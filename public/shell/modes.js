@@ -7,8 +7,8 @@ window.boardModes = {
       grid.className = 'home-grid';
 
       const tiles = [
-        { id: 'overlay', icon: '✏️', label: 'Малювання' },
         { id: 'web', icon: '🌐', label: 'Веб' },
+        { id: 'media', icon: '▶️', label: 'Медіа' },
         { id: 'presentation', icon: '📊', label: 'Презентація' },
         { id: 'image', icon: '🖼️', label: 'Зображення' },
       ];
@@ -22,17 +22,6 @@ window.boardModes = {
       });
 
       container.appendChild(grid);
-    },
-  },
-
-  overlay: {
-    icon: '✏️',
-    label: 'Малювання',
-    onActivate: () => window.boardApi.overlay.show(),
-    onDeactivate: () => window.boardApi.overlay.hide(),
-    render: (container) => {
-      container.innerHTML =
-        '<div class="placeholder">Малювання активне на весь екран.<br>Плаваюча панель інструментів — зверху.<br>Ctrl+Alt+D повертає малювання, якщо увімкнено «пропускати кліки».</div>';
     },
   },
 

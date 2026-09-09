@@ -6,4 +6,7 @@ contextBridge.exposeInMainWorld('overlayApi', {
     ipcRenderer.on('overlay:force-toggle-pass-through', () => callback());
   },
   close: () => ipcRenderer.send('overlay:request-close'),
+  onClear: (callback: () => void) => {
+    ipcRenderer.on('overlay:clear', () => callback());
+  },
 });

@@ -2,27 +2,14 @@ const contentEl = document.getElementById('content');
 const modeNav = document.getElementById('mode-nav');
 const modeLabel = document.getElementById('current-mode-label');
 const fullscreenToggle = document.getElementById('fullscreen-toggle');
-const youtubeBtn = document.getElementById('nav-youtube');
 const topbarClock = document.getElementById('topbar-clock');
 
 let currentMode = null;
-let webIsYoutube = false;
-
-function isYoutubeUrl(url) {
-  try {
-    const host = new URL(url).hostname;
-    return host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtu.be';
-  } catch {
-    return false;
-  }
-}
 
 function updateModeNavActive() {
   modeNav.querySelectorAll('[data-mode]').forEach((btn) => {
-    const isWebBtn = btn.dataset.mode === 'web';
-    btn.classList.toggle('active', btn.dataset.mode === currentMode && !(isWebBtn && webIsYoutube));
+    btn.classList.toggle('active', btn.dataset.mode === currentMode);
   });
-  youtubeBtn.classList.toggle('active', currentMode === 'web' && webIsYoutube);
 }
 
 function activateMode(modeId) {
@@ -33,41 +20,85 @@ function activateMode(modeId) {
     window.boardModes[currentMode].onDeactivate();
   }
 
+  // Малювання прив'язане до того, що зараз на екрані — при переході на іншу
+  // вкладку стара анотація втрачає сенс, тож ховаємо (і, відповідно, чистимо
+  // від попереднього фіксу) оверлей автоматично.
+  window.boardApi.overlay.hide();
+
   mode.render(contentEl);
   mode.onActivate?.();
 
   currentMode = modeId;
-  if (modeId !== 'web') webIsYoutube = false;
   modeLabel.textContent = modeId === 'home' ? '' : `${mode.icon ?? ''} ${mode.label}`.trim();
   updateModeNavActive();
 }
 window.activateMode = activateMode;
 
-// called by web-mode.js whenever the embedded page's URL changes
-window.setWebUrlForNav = function setWebUrlForNav(url) {
-  webIsYoutube = isYoutubeUrl(url);
-  updateModeNavActive();
-};
-
+// Нав-кнопки слухають pointerdown, а не click: коли вбудований браузер
+// (WebContentsView) тримає фокус (наприклад, автофокус поля пошуку на
+// Google/YouTube), перший клік по власних кнопках вікна йде лише на
+// перефокусування і синтетичний click не долітає — а pointerdown спрацьовує
+// одразу, з першого разу.
 modeNav.querySelectorAll('[data-mode]').forEach((btn) => {
-  btn.addEventListener('click', () => activateMode(btn.dataset.mode));
+  btn.addEventListener('pointerdown', () => activateMode(btn.dataset.mode));
 });
 activateMode('home');
 
-// --- YouTube quick launch ---
-youtubeBtn.addEventListener('click', () => {
-  webIsYoutube = true;
-  activateMode('web');
-  window.boardApi.web.navigate('https://www.youtube.com');
+// --- малювання поверх (доступне звідусіль, у т.ч. з фулскріну переглядачів) ---
+document.getElementById('pencil-toggle').addEventListener('pointerdown', () => {
+  window.boardApi.overlay.toggle();
+});
+document.getElementById('pencil-toggle-fs').addEventListener('pointerdown', () => {
+  window.boardApi.overlay.toggle();
 });
 
 // --- fullscreen toggle ---
-fullscreenToggle.addEventListener('click', async () => {
+fullscreenToggle.addEventListener('pointerdown', async () => {
   const isFullscreen = await window.boardApi.window.toggleFullscreen();
   fullscreenToggle.classList.toggle('active', isFullscreen);
 });
 window.boardApi.window.isFullscreen().then((isFullscreen) => {
   fullscreenToggle.classList.toggle('active', isFullscreen);
+});
+
+// --- налаштування ---
+const ALWAYS_FULLSCREEN_KEY = 'settings:always-fullscreen';
+const settingsToggle = document.getElementById('settings-toggle');
+const settingsMenu = document.getElementById('settings-menu');
+const alwaysFullscreenCheckbox = document.getElementById('settings-always-fullscreen');
+const autoLaunchCheckbox = document.getElementById('settings-auto-launch');
+
+settingsToggle.addEventListener('pointerdown', async (e) => {
+  e.stopPropagation();
+  if (!settingsMenu.hidden) {
+    settingsMenu.hidden = true;
+    return;
+  }
+  alwaysFullscreenCheckbox.checked = Boolean(await window.boardApi.store.get(ALWAYS_FULLSCREEN_KEY));
+  autoLaunchCheckbox.checked = await window.boardApi.window.getAutoLaunch();
+  settingsMenu.hidden = false;
+});
+
+document.addEventListener('pointerdown', (e) => {
+  if (!settingsMenu.hidden && !settingsMenu.contains(e.target) && e.target !== settingsToggle) {
+    settingsMenu.hidden = true;
+  }
+});
+
+alwaysFullscreenCheckbox.addEventListener('change', () => {
+  window.boardApi.store.set(ALWAYS_FULLSCREEN_KEY, alwaysFullscreenCheckbox.checked);
+});
+
+autoLaunchCheckbox.addEventListener('change', () => {
+  window.boardApi.window.setAutoLaunch(autoLaunchCheckbox.checked);
+});
+
+document.getElementById('settings-minimize').addEventListener('pointerdown', () => {
+  window.boardApi.window.minimize();
+});
+
+document.getElementById('settings-quit').addEventListener('pointerdown', () => {
+  window.boardApi.window.quit();
 });
 
 // --- topbar clock ---

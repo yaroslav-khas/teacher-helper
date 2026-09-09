@@ -190,6 +190,60 @@ body.web-fullscreen .pdf-toolbar {
   flex: 1;
 }
 
+.web-bookmarks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #17191e;
+  border-bottom: 1px solid #2c303a;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.web-bookmark {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #262a33;
+  border: none;
+  border-radius: 14px;
+  color: inherit;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.web-bookmark:hover {
+  background: #323744;
+}
+
+.web-bookmark-remove {
+  opacity: 0.5;
+  font-size: 11px;
+}
+
+.web-bookmark-remove:hover {
+  opacity: 1;
+}
+
+.web-bookmark-add {
+  font-weight: bold;
+  color: #4c8dff;
+}
+
+body.web-fullscreen .web-bookmarks {
+  display: none;
+}
+
+/* --- whiteboard (чистий аркуш) --- */
+.whiteboard-blank {
+  height: 100%;
+  background: #ffffff;
+}
+
 /* --- presentation file library --- */
 .file-empty {
   height: 100%;
@@ -409,6 +463,32 @@ body.web-fullscreen .pdf-toolbar {
   background: rgba(38, 42, 51, 0.95);
 }
 
+/* Кнопка малювання, що живе поза топбаром — прихована в звичайному режимі
+   (топбар і так має свою ✏️), зʼявляється тільки коли навігацію сховано
+   через фулскрін PDF/pptx/зображення. */
+.pencil-fs-btn {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 30;
+  background: rgba(20, 22, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: white;
+  font-size: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pencil-fs-btn:hover {
+  background: rgba(38, 42, 51, 0.95);
+}
+
+body.web-fullscreen .pencil-fs-btn {
+  display: block;
+}
+
 .pdf-fallback {
   height: 100%;
   display: flex;
@@ -422,6 +502,140 @@ body.web-fullscreen .pdf-toolbar {
 .pdf-fallback-actions {
   display: flex;
   gap: 10px;
+}
+
+/* --- pptx viewer: thumbnail rail + large preview --- */
+.pptx-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pptx-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.pptx-rail {
+  width: 160px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  background: #16181d;
+  border-right: 1px solid #2c303a;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pptx-thumb {
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pptx-thumb canvas {
+  width: 100%;
+  display: block;
+  border-radius: 4px;
+  background: #0b0c0f;
+  box-shadow: 0 0 0 1px #2c303a;
+}
+
+.pptx-thumb-label {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.pptx-thumb:hover {
+  border-color: #3a4050;
+}
+
+.pptx-thumb.active {
+  border-color: #4c8dff;
+}
+
+.pptx-thumb.active .pptx-thumb-label {
+  opacity: 1;
+  color: #4c8dff;
+}
+
+.pptx-main-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0b0c0f;
+}
+
+.pptx-main-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+body.web-fullscreen .pptx-rail {
+  display: none;
+}
+
+/* --- image viewer --- */
+.image-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.image-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: #0b0c0f;
+}
+
+.image-el {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+.image-el.zoomed {
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: auto;
+  cursor: zoom-out;
+}
+
+/* --- video viewer --- */
+.video-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0b0c0f;
+}
+
+.video-el {
+  max-width: 100%;
+  max-height: 100%;
 }
 
 /* --- widget layer --- */
@@ -471,6 +685,70 @@ body.web-fullscreen .pdf-toolbar {
 
 .widgets-menu button:hover {
   background: #262a33;
+}
+
+/* --- settings menu --- */
+.settings-menu {
+  position: fixed;
+  top: 52px;
+  right: 16px;
+  z-index: 40;
+  background: #1d2026;
+  border: 1px solid #333844;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 280px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.settings-row input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.settings-btn {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+
+.settings-btn-blue {
+  background: #0a84ff;
+}
+
+.settings-btn-blue:hover {
+  background: #3a9bff;
+}
+
+.settings-btn-red {
+  background: #ff3b30;
+}
+
+.settings-btn-red:hover {
+  background: #ff5c52;
 }
 
 /* --- update banner --- */

@@ -4,17 +4,22 @@
   "description": "Єдиний інструмент для інтерактивної дошки",
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npm run build:harness",
+    "build:harness": "esbuild src/pptx-print-harness/render.js --bundle --format=iife --outfile=public/pptx-print/bundle.js",
     "dev": "npm run build && electron .",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "dist:publish": "npm run build && electron-builder --publish always"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "electron": "^32.0.0",
     "electron-builder": "^25.0.0",
+    "esbuild": "^0.28.2",
     "typescript": "^5.5.0"
   },
   "dependencies": {
+    "@aiden0z/pptx-renderer": "^1.2.4",
+    "@silurus/ooxml": "^0.86.1",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.3.0",
     "pdfjs-dist": "^5.6.205"
@@ -38,8 +43,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "PLACEHOLDER_OWNER",
-        "repo": "PLACEHOLDER_REPO"
+        "owner": "yaroslav-khas",
+        "repo": "teacher-helper"
       }
     ]
   }

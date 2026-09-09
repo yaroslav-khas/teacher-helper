@@ -14,6 +14,12 @@ export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.setBounds(bounds);
     overlayWindow.setIgnoreMouseEvents(false);
+    // Перевстановлюємо щоразу перед показом, а не лише один раз при
+    // створенні: після виходу з fullscreen і повторного входу macOS "забуває"
+    // приналежність вікна до Space, і показ без цього спричиняє стрибок
+    // екрана на інший Space замість тихого показу поверх поточного.
+    overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+    overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     overlayWindow.show();
     globalShortcut.register(CLICK_THROUGH_SHORTCUT, forceTogglePassThrough);
     return overlayWindow;
@@ -58,6 +64,10 @@ export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
 
 export function hideOverlayWindow(): void {
   globalShortcut.unregister(CLICK_THROUGH_SHORTCUT);
+  // Малюнок стирається щоразу, як оверлей ховається — інакше стара анотація
+  // з попереднього контексту (наприклад, з презентації) несподівано випливає
+  // поверх зовсім іншої програми наступного разу, коли оверлей знову покажуть.
+  overlayWindow?.webContents.send('overlay:clear');
   overlayWindow?.hide();
 }
 
@@ -69,6 +79,25 @@ export function destroyOverlayWindow(): void {
     overlayWindow.destroy();
   }
   overlayWindow = null;
+}
+
+// На macOS вхід іншого вікна (нашого ж shellWindow) у справжній fullscreen
+// створює окремий Space, і always-on-top вікна (включно з цим оверлеєм)
+// іноді "губляться", доки їхні прапорці не переустановити вже ПІСЛЯ
+// переходу. Викликати з shellWindow 'enter-full-screen'.
+export function reassertOverlayVisibility(): void {
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
+  // Вікно оверлею не знищується при "схованні" (лишається живим для швидкого
+  // повторного показу), тому без цієї перевірки переустановка прапорців
+  // випадково повертала на екран оверлей, який мав лишатись прихованим.
+  if (!overlayWindow.isVisible()) return;
+  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  overlayWindow.moveTop();
+}
+
+export function getDisplayBoundsUnderCursor(): Electron.Rectangle {
+  return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds;
 }
 
 export function isOverlayVisible(): boolean {
@@ -84,16 +113,24 @@ export function toggleOverlayWindow(bounds: Electron.Rectangle): void {
 }
 
 export function registerOverlayIpc(getShellWindow: () => BrowserWindow | null): void {
-  ipcMain.handle('overlay:show', () => {
+  const shellDisplayBounds = (): Electron.Rectangle => {
     const shellWindow = getShellWindow();
     const display = shellWindow
       ? screen.getDisplayMatching(shellWindow.getBounds())
       : screen.getPrimaryDisplay();
-    showOverlayWindow(display.bounds);
+    return display.bounds;
+  };
+
+  ipcMain.handle('overlay:show', () => {
+    showOverlayWindow(shellDisplayBounds());
   });
 
   ipcMain.handle('overlay:hide', () => {
     hideOverlayWindow();
+  });
+
+  ipcMain.handle('overlay:toggle', () => {
+    toggleOverlayWindow(shellDisplayBounds());
   });
 
   ipcMain.on('overlay:set-ignore-mouse-events', (_event, ignore: boolean) => {
