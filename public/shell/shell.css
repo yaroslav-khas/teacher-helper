@@ -33,6 +33,14 @@
   display: none !important;
 }
 
+/* Без цього дотик по будь-якій кнопці на тачскріні чекав ~300мс на можливий
+   подвійний тап (браузерний жест зуму) — відчувалось як загальне "зависання"
+   інтерфейсу на дошці, хоча миша працювала миттєво. */
+button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
   margin: 0;
   width: 100%;
@@ -74,10 +82,19 @@ body {
   color: inherit;
   cursor: pointer;
   line-height: 1.2;
+  /* Без цього дотик на тачскріні чекав ~300мс на можливий подвійний тап
+     (зум) перед тим, як зареєструвати натискання — відчувалось як "зависання". */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.icon-btn:hover {
-  background: var(--surface-hover);
+/* Лише для реальної миші — на тачскріні :hover не знімається дотиком
+   (нема "виходу курсора"), тож кнопка (напр. повного екрана) лишалась би
+   візуально підсвіченою/"застиглою" назавжди після одного дотику. */
+@media (hover: hover) {
+  .icon-btn:hover {
+    background: var(--surface-hover);
+  }
 }
 
 .icon-btn.active {

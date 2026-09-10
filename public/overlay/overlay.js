@@ -27,10 +27,18 @@ canvas.addEventListener('pointerdown', (e) => {
   drawing = true;
   lastX = e.clientX;
   lastY = e.clientY;
+  // Без явного захоплення вказівника швидкий мазок пальцем на тачскріні
+  // (де координати "шумлять" сильніше за мишу) міг на мить вискочити за межі
+  // canvas — і подальші pointermove йшли вже повз нього, лінія обривалась,
+  // виглядало як "зависання" панелі. setPointerCapture прив'язує весь цей
+  // конкретний дотик до canvas незалежно від фактичних координат.
+  canvas.setPointerCapture(e.pointerId);
+  e.preventDefault();
 });
 
 canvas.addEventListener('pointermove', (e) => {
   if (!drawing) return;
+  e.preventDefault();
   const pressure = e.pressure > 0 ? e.pressure : 0.5;
   ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
   ctx.strokeStyle = color;
@@ -51,11 +59,14 @@ window.addEventListener('pointercancel', () => {
 });
 
 document.querySelectorAll('.swatch').forEach((btn) => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (e) => {
     color = btn.dataset.color;
     erasing = false;
     document.getElementById('eraser').classList.remove('active');
     document.querySelectorAll('.swatch').forEach((b) => b.classList.toggle('active', b === btn));
+    // На тачскріні кнопка інакше лишається візуально "натиснутою"/у фокусі
+    // назавжди — тут немає миші, яка природньо зняла б цей стан.
+    e.currentTarget.blur();
   });
 });
 
@@ -66,13 +77,17 @@ document.getElementById('width').addEventListener('input', (e) => {
 document.getElementById('eraser').addEventListener('click', (e) => {
   erasing = !erasing;
   e.currentTarget.classList.toggle('active', erasing);
+  e.currentTarget.blur();
 });
 
 function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-document.getElementById('clear').addEventListener('click', clearCanvas);
+document.getElementById('clear').addEventListener('click', (e) => {
+  clearCanvas();
+  e.currentTarget.blur();
+});
 window.overlayApi.onClear(clearCanvas);
 
 document.getElementById('close').addEventListener('click', () => {

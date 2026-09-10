@@ -4,6 +4,10 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: transparent;
+  /* Без цього дотик біля краю екрана (особливо знизу) на Windows-тачскріні
+     міг трактуватись ОС як системний жест (виклик панелі задач) замість
+     штриха малювання. */
+  touch-action: none;
 }
 
 #board {
@@ -38,10 +42,16 @@ html, body {
   width: 40px;
   height: 40px;
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.toolbar button:hover {
-  background: #323744;
+/* Лише для реальної миші — на тачскріні :hover не має "відпускання",
+   тож без цієї умови кнопка лишалась би підсвіченою назавжди після дотику. */
+@media (hover: hover) {
+  .toolbar button:hover {
+    background: #323744;
+  }
 }
 
 .toolbar button.active {
@@ -53,6 +63,7 @@ html, body {
   color: #aaa;
   padding: 0 4px;
   font-size: 20px;
+  touch-action: none;
 }
 
 .swatch {

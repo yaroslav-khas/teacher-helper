@@ -43,6 +43,14 @@ function activateMode(modeId) {
 window.activateMode = activateMode;
 window.currentBoardMode = () => currentMode;
 
+// На тачскріні :focus по дотику ніколи природньо не знімається (нема миші,
+// яка б "клікнула повз") — без цього кнопки в топбарі (напр. повний екран)
+// візуально лишались би "застиглими" в натиснутому стані після дотику.
+document.addEventListener('pointerup', (e) => {
+  const btn = e.target.closest('.icon-btn, .settings-btn, .settings-icon-btn');
+  btn?.blur();
+});
+
 // Нав-кнопки слухають pointerdown, а не click: коли вбудований браузер
 // (WebContentsView) тримає фокус (наприклад, автофокус поля пошуку на
 // Google/YouTube), перший клік по власних кнопках вікна йде лише на
