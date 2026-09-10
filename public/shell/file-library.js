@@ -20,8 +20,14 @@ function fileLibExtIcon(name) {
 // "Зображеннями", кожна зі своїм api-неймспейсом і власним станом.
 window.renderFileLibrary = async function renderFileLibrary(container, config) {
   const { api, state } = config;
+  // Фіксуємо "покоління" на момент запуску: якщо користувач встигне
+  // перемкнутись на інший режим, поки тут ще триває await (повільний диск,
+  // мережева тека), усі подальші записи в DOM з цього виклику скасовуються.
+  const myGeneration = window.getRenderGeneration();
+  const isStale = () => window.getRenderGeneration() !== myGeneration;
 
   function renderChooseRoot() {
+    if (isStale()) return;
     container.innerHTML = '<div class="file-empty"></div>';
     const empty = container.querySelector('.file-empty');
 
@@ -51,6 +57,7 @@ window.renderFileLibrary = async function renderFileLibrary(container, config) {
 
   async function renderFolder() {
     const result = await api.list(state.current);
+    if (isStale()) return;
     const allEntries = result.ok ? result.entries : [];
     // Папки завжди показуємо (для навігації); файли — тільки релевантного для
     // цього режиму типу, якщо задано список розширень, щоб "Медіа" не
@@ -149,6 +156,7 @@ window.renderFileLibrary = async function renderFileLibrary(container, config) {
   }
 
   const root = await api.getRoot();
+  if (isStale()) return;
   if (!root) {
     renderChooseRoot();
     return;

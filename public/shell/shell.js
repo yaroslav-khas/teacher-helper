@@ -5,6 +5,12 @@ const fullscreenToggle = document.getElementById('fullscreen-toggle');
 const topbarClock = document.getElementById('topbar-clock');
 
 let currentMode = null;
+// Лічильник "покоління" рендеру: асинхронні режими (бібліотеки файлів тощо)
+// звіряються з ним перед кожним записом у DOM. Без цього повільна відповідь
+// від попереднього режиму (повільний диск/мережева тека на Windows) могла
+// дозаписатись поверх щойно відкритого — і виглядало це як "тека зникла".
+let renderGeneration = 0;
+window.getRenderGeneration = () => renderGeneration;
 
 function updateModeNavActive() {
   modeNav.querySelectorAll('[data-mode]').forEach((btn) => {
@@ -15,6 +21,8 @@ function updateModeNavActive() {
 function activateMode(modeId) {
   const mode = window.boardModes[modeId];
   if (!mode) return;
+
+  renderGeneration += 1;
 
   if (currentMode && window.boardModes[currentMode]?.onDeactivate) {
     window.boardModes[currentMode].onDeactivate();

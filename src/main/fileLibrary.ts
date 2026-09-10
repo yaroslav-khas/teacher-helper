@@ -1,5 +1,5 @@
 import { BrowserWindow, dialog, ipcMain, shell } from 'electron';
-import * as fs from 'fs';
+import { promises as fsp } from 'fs';
 import * as path from 'path';
 import Store from 'electron-store';
 
@@ -16,8 +16,12 @@ interface FileFilter {
   extensions: string[];
 }
 
-function listFolder(folderPath: string): Entry[] {
-  const items = fs.readdirSync(folderPath, { withFileTypes: true });
+// Асинхронно — синхронне читання (fs.readdirSync) блокує ввесь Electron
+// main-процес, а разом з ним і обробку кліків/IPC в усьому застосунку, поки
+// читається диск. На повільній/мережевій теці на Windows це відчувалось як
+// "зависання" застосунку цілком, не лише цієї вкладки.
+async function listFolder(folderPath: string): Promise<Entry[]> {
+  const items = await fsp.readdir(folderPath, { withFileTypes: true });
   const entries = items
     .filter((item) => !item.name.startsWith('.'))
     .map((item) => ({
@@ -59,7 +63,7 @@ async function addFile(win: BrowserWindow, targetFolder: string, filters: FileFi
   for (const src of result.filePaths) {
     const dest = path.join(targetFolder, path.basename(src));
     if (path.resolve(src) === path.resolve(dest)) continue;
-    fs.copyFileSync(src, dest);
+    await fsp.copyFile(src, dest);
   }
 }
 
@@ -81,9 +85,9 @@ export function registerFileLibraryIpc(
     return chooseRoot(win, storeKey, chooseRootTitle);
   });
 
-  ipcMain.handle(`${namespace}:list`, (_event, folderPath: string) => {
+  ipcMain.handle(`${namespace}:list`, async (_event, folderPath: string) => {
     try {
-      return { ok: true, entries: listFolder(folderPath) };
+      return { ok: true, entries: await listFolder(folderPath) };
     } catch (err) {
       return { ok: false, error: (err as Error).message };
     }
@@ -101,6 +105,6 @@ export function registerFileLibraryIpc(
   });
 
   ipcMain.handle(`${namespace}:read-file-bytes`, (_event, filePath: string) => {
-    return fs.readFileSync(filePath);
+    return fsp.readFile(filePath);
   });
 }

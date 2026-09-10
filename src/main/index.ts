@@ -13,6 +13,24 @@ import { registerWebViewIpc } from './webViewManager';
 import { registerFileLibraryIpc } from './fileLibrary';
 import { configureUpdater } from './updater';
 import { startMomentOfSilenceScheduler, registerMomentOfSilenceTestIpc } from './momentOfSilence';
+import { showSplashWindow, closeSplashWindow } from './splashWindow';
+
+// На класних ПК дошка часто працює через дубльований/клонований дисплей
+// (проектор). Апаратне відеодекодування Chromium на клонованому виведенні
+// нерідко рендериться білим/чорним екраном — GPU-оверлей відео не завжди
+// коректно копіюється на другий вихід. Програмний рендер вирішує це ціною
+// трохи вищого навантаження на CPU під час відтворення відео.
+app.disableHardwareAcceleration();
+
+// Забороняємо другий інстанс: якщо вчитель, не дочекавшись запуску,
+// клацає по ярлику ще раз — без цього одночасно піднімалось два повністю
+// незалежних процеси, що боролись за той самий файл налаштувань і за
+// одні й ті ж вікна/дисплеї (звідси "теки збиваються", зависання кліків,
+// дублікати вікон з білим екраном відео).
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+}
 
 const TOGGLE_OVERLAY_SHORTCUT = 'CommandOrControl+Alt+M';
 
@@ -29,6 +47,7 @@ function createShellWindow(): void {
     fullscreen: alwaysFullscreen,
     frame: true,
     autoHideMenuBar: true,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, '../preload/shell-preload.js'),
       contextIsolation: true,
@@ -37,6 +56,13 @@ function createShellWindow(): void {
   });
 
   shellWindow.loadFile(path.join(__dirname, '../../public/shell/index.html'));
+
+  // Сплеш ховаємо лише тепер, коли головне вікно реально готове показатись —
+  // без розриву між "сплеш зник" і "з'явився контент" (порожній білий кадр).
+  shellWindow.once('ready-to-show', () => {
+    closeSplashWindow();
+    shellWindow?.show();
+  });
 
   shellWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
     console.log('[shell renderer]', level, message, `(${sourceId}:${line})`);
@@ -144,52 +170,64 @@ function registerShellIpc(): void {
   });
 }
 
-app.whenReady().then(() => {
-  registerStoreIpc();
-  registerShellIpc();
-  registerOverlayIpc(() => shellWindow);
-  registerWebViewIpc(() => shellWindow);
-  registerFileLibraryIpc(
-    'presentation',
-    'presentation:root',
-    'Обрати папку з презентаціями',
-    [{ name: 'Презентації', extensions: ['pptx', 'ppt'] }],
-    () => shellWindow,
-  );
-  registerFileLibraryIpc(
-    'image',
-    'image:root',
-    'Обрати папку із зображеннями й підручниками',
-    [{ name: 'Зображення та PDF', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf'] }],
-    () => shellWindow,
-  );
-  registerFileLibraryIpc(
-    'media',
-    'media:root',
-    'Обрати папку з відео',
-    [{ name: 'Відео', extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'] }],
-    () => shellWindow,
-  );
-  createShellWindow();
-  startMomentOfSilenceScheduler(() => shellWindow);
-  registerMomentOfSilenceTestIpc(() => shellWindow);
-
-  globalShortcut.register(TOGGLE_OVERLAY_SHORTCUT, () => {
-    toggleOverlayWindow(getDisplayBoundsUnderCursor());
+if (gotSingleInstanceLock) {
+  // Спроба другого запуску (подвійний клік по ярлику) — просто повертаємо
+  // фокус на вже відкрите вікно замість запуску ще одного процесу.
+  app.on('second-instance', () => {
+    if (!shellWindow) return;
+    if (shellWindow.isMinimized()) shellWindow.restore();
+    shellWindow.show();
+    shellWindow.focus();
   });
 
-  if (shellWindow) {
-    configureUpdater(shellWindow);
-  }
-});
+  app.whenReady().then(() => {
+    showSplashWindow();
+    registerStoreIpc();
+    registerShellIpc();
+    registerOverlayIpc(() => shellWindow);
+    registerWebViewIpc(() => shellWindow);
+    registerFileLibraryIpc(
+      'presentation',
+      'presentation:root',
+      'Обрати папку з презентаціями',
+      [{ name: 'Презентації', extensions: ['pptx', 'ppt'] }],
+      () => shellWindow,
+    );
+    registerFileLibraryIpc(
+      'image',
+      'image:root',
+      'Обрати папку із зображеннями й підручниками',
+      [{ name: 'Зображення та PDF', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'pdf'] }],
+      () => shellWindow,
+    );
+    registerFileLibraryIpc(
+      'media',
+      'media:root',
+      'Обрати папку з відео',
+      [{ name: 'Відео', extensions: ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'] }],
+      () => shellWindow,
+    );
+    createShellWindow();
+    startMomentOfSilenceScheduler(() => shellWindow);
+    registerMomentOfSilenceTestIpc(() => shellWindow);
 
-app.on('window-all-closed', () => {
-  // Не тримаємо процес у фоні після закриття (без macOS-конвенції
-  // "додаток лишається в доку") — це вчительський інструмент, закриття
-  // головного вікна має завершувати все, включно з плаваючою кнопкою.
-  app.quit();
-});
+    globalShortcut.register(TOGGLE_OVERLAY_SHORTCUT, () => {
+      toggleOverlayWindow(getDisplayBoundsUnderCursor());
+    });
 
-app.on('will-quit', () => {
-  globalShortcut.unregisterAll();
-});
+    if (shellWindow) {
+      configureUpdater(shellWindow);
+    }
+  });
+
+  app.on('window-all-closed', () => {
+    // Не тримаємо процес у фоні після закриття (без macOS-конвенції
+    // "додаток лишається в доку") — це вчительський інструмент, закриття
+    // головного вікна має завершувати все, включно з плаваючою кнопкою.
+    app.quit();
+  });
+
+  app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
+  });
+}
