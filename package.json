@@ -1,6 +1,6 @@
 {
   "name": "teacher-board-helper",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Єдиний інструмент для інтерактивної дошки",
   "author": "Yaroslav Khas",
   "main": "dist/main/index.js",

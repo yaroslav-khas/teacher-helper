@@ -10,10 +10,21 @@ function forceTogglePassThrough(): void {
   overlayWindow.webContents.send('overlay:force-toggle-pass-through');
 }
 
+// На Windows реєстрація хіт-тесту для прозорого always-on-top вікна іноді не
+// "заводиться" сама після setIgnoreMouseEvents(false) — вікно видиме, але
+// геть не отримує вхід (миша/тач проходить крізь нього), хоча на macOS той
+// самий код працює одразу. Примусове true->false і .focus() — задокументований
+// у спільноті Electron обхід саме цього: він ніби "штовхає" вікно перереєструвати
+// себе як таке, що приймає вхід.
+function kickHitTesting(win: BrowserWindow): void {
+  win.setIgnoreMouseEvents(true);
+  win.setIgnoreMouseEvents(false);
+  win.focus();
+}
+
 export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.setBounds(bounds);
-    overlayWindow.setIgnoreMouseEvents(false);
     // Перевстановлюємо щоразу перед показом, а не лише один раз при
     // створенні: після виходу з fullscreen і повторного входу macOS "забуває"
     // приналежність вікна до Space, і показ без цього спричиняє стрибок
@@ -21,6 +32,7 @@ export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
     overlayWindow.setAlwaysOnTop(true, 'screen-saver');
     overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
     overlayWindow.show();
+    kickHitTesting(overlayWindow);
     globalShortcut.register(CLICK_THROUGH_SHORTCUT, forceTogglePassThrough);
     return overlayWindow;
   }
@@ -49,8 +61,11 @@ export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
 
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  overlayWindow.setIgnoreMouseEvents(false);
   overlayWindow.loadFile(path.join(__dirname, '../../public/overlay/index.html'));
+
+  overlayWindow.once('ready-to-show', () => {
+    if (overlayWindow) kickHitTesting(overlayWindow);
+  });
 
   overlayWindow.on('closed', () => {
     globalShortcut.unregister(CLICK_THROUGH_SHORTCUT);
