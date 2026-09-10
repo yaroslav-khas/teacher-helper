@@ -47,11 +47,23 @@
       <input type="checkbox" id="settings-auto-launch" />
       Запускати автоматично при вмиканні комп'ютера
     </label>
+    <label class="settings-row settings-row-switcher">
+      <span>🌗 Світла тема</span>
+      <span class="switcher">
+        <input type="checkbox" id="settings-light-theme" />
+        <span class="switcher-track"></span>
+      </span>
+    </label>
     <button id="settings-silence-now" class="settings-btn settings-btn-neutral">🕯️ Хвилина мовчання</button>
     <div class="settings-row-inline">
       <button id="settings-anthem-now" class="settings-btn settings-btn-neutral">🇺🇦 Гімн України</button>
       <button id="settings-anthem-gear" class="settings-icon-btn" title="Обрати відеофайл гімну">⚙️</button>
     </div>
+    <div class="settings-version-row">
+      <span id="settings-version-label">Версія: …</span>
+      <button id="settings-check-update" class="settings-icon-btn" title="Перевірити оновлення">🔄</button>
+    </div>
+    <div id="settings-update-status" class="settings-update-status"></div>
     <div class="settings-actions">
       <button id="settings-minimize" class="settings-btn settings-btn-blue">Згорнути</button>
       <button id="settings-quit" class="settings-btn settings-btn-red">Вихід</button>

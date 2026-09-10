@@ -1,3 +1,30 @@
+:root {
+  --bg: #14161a;
+  --surface: #1d2026;
+  --surface-alt: #17191e;
+  --surface-hover: #323744;
+  --btn-bg: #262a33;
+  --border: #2c303a;
+  --border-strong: #3a4050;
+  --text: #f2f2f2;
+  --accent: #4c8dff;
+}
+
+/* Область перегляду медіа (pdf/pptx/зображення/відео/хвилина мовчання)
+   навмисно лишається темною в обох темах — так само, як у будь-якого
+   відеоплеєра область самого відео не "світлішає" разом з інтерфейсом. */
+:root.theme-light {
+  --bg: #f2f3f5;
+  --surface: #ffffff;
+  --surface-alt: #eceef1;
+  --surface-hover: #e2e5ea;
+  --btn-bg: #eceef1;
+  --border: #d8dbe1;
+  --border-strong: #c2c6ce;
+  --text: #1d2026;
+  --accent: #2f6fe0;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -11,8 +38,8 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #14161a;
-  color: #f2f2f2;
+  background: var(--bg);
+  color: var(--text);
   font-family: "Segoe UI", system-ui, sans-serif;
   user-select: none;
 }
@@ -27,8 +54,8 @@ body {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #1d2026;
-  border-bottom: 1px solid #2c303a;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -40,7 +67,7 @@ body {
 
 .icon-btn {
   font-size: 18px;
-  background: #262a33;
+  background: var(--btn-bg);
   border: 2px solid transparent;
   border-radius: 8px;
   padding: 6px 10px;
@@ -50,11 +77,11 @@ body {
 }
 
 .icon-btn:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 .icon-btn.active {
-  border-color: #4c8dff;
+  border-color: var(--accent);
 }
 
 .mode-label {
@@ -118,8 +145,8 @@ body.web-fullscreen .pdf-toolbar {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  background: #1d2026;
-  border: 2px solid #2c303a;
+  background: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 20px;
   color: inherit;
   cursor: pointer;
@@ -127,8 +154,8 @@ body.web-fullscreen .pdf-toolbar {
 
 .home-tile:hover,
 .home-tile:active {
-  border-color: #4c8dff;
-  background: #262a33;
+  border-color: var(--accent);
+  background: var(--surface-hover);
 }
 
 .home-tile-icon {
@@ -163,8 +190,8 @@ body.web-fullscreen .pdf-toolbar {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #1d2026;
-  border: 2px solid #2c303a;
+  background: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 12px;
   color: inherit;
   padding: 10px 14px;
@@ -174,8 +201,8 @@ body.web-fullscreen .pdf-toolbar {
 
 .home-link-tile:hover,
 .home-link-tile:active {
-  border-color: #4c8dff;
-  background: #262a33;
+  border-color: var(--accent);
+  background: var(--surface-hover);
 }
 
 .home-link-icon {
@@ -194,7 +221,7 @@ body.web-fullscreen .pdf-toolbar {
   align-items: center;
   gap: 4px;
   padding: 4px 8px 0;
-  background: #14161a;
+  background: var(--bg);
   flex-shrink: 0;
   overflow-x: auto;
 }
@@ -204,8 +231,8 @@ body.web-fullscreen .pdf-toolbar {
   align-items: center;
   gap: 6px;
   max-width: 150px;
-  background: #1d2026;
-  border: 1px solid #2c303a;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-bottom: none;
   border-radius: 8px 8px 0 0;
   color: inherit;
@@ -216,12 +243,12 @@ body.web-fullscreen .pdf-toolbar {
 }
 
 .web-tab:hover {
-  background: #262a33;
+  background: var(--btn-bg);
 }
 
 .web-tab.active {
-  background: #262a33;
-  border-color: #4c8dff;
+  background: var(--btn-bg);
+  border-color: var(--accent);
 }
 
 .web-tab-label {
@@ -243,7 +270,7 @@ body.web-fullscreen .pdf-toolbar {
 .web-tab-add {
   max-width: none;
   font-weight: bold;
-  color: #4c8dff;
+  color: var(--accent);
   padding: 5px 10px;
 }
 
@@ -256,14 +283,14 @@ body.web-fullscreen .web-tabs {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #1d2026;
-  border-bottom: 1px solid #2c303a;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .web-toolbar button {
   font-size: 14px;
-  background: #262a33;
+  background: var(--btn-bg);
   border: none;
   border-radius: 6px;
   color: inherit;
@@ -272,7 +299,7 @@ body.web-fullscreen .web-tabs {
 }
 
 .web-toolbar button:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 .web-toolbar button:disabled {
@@ -281,13 +308,13 @@ body.web-fullscreen .web-tabs {
 }
 
 .web-toolbar button:disabled:hover {
-  background: #262a33;
+  background: var(--btn-bg);
 }
 
 #web-url {
   flex: 1;
-  background: #262a33;
-  border: 1px solid #333844;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   color: inherit;
   padding: 5px 10px;
@@ -303,8 +330,8 @@ body.web-fullscreen .web-tabs {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #17191e;
-  border-bottom: 1px solid #2c303a;
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   overflow-x: auto;
 }
@@ -313,7 +340,7 @@ body.web-fullscreen .web-tabs {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #262a33;
+  background: var(--btn-bg);
   border: none;
   border-radius: 14px;
   color: inherit;
@@ -325,7 +352,7 @@ body.web-fullscreen .web-tabs {
 }
 
 .web-bookmark:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 .web-bookmark-remove {
@@ -339,7 +366,7 @@ body.web-fullscreen .web-tabs {
 
 .web-bookmark-add {
   font-weight: bold;
-  color: #4c8dff;
+  color: var(--accent);
 }
 
 body.web-fullscreen .web-bookmarks {
@@ -354,15 +381,15 @@ body.web-fullscreen .web-bookmarks {
   justify-content: space-between;
   align-items: center;
   padding: 6px 12px;
-  background: #1d2026;
-  border-bottom: 1px solid #2c303a;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .web-fullscreen-bar button {
   font-size: 13px;
-  background: #262a33;
-  border: 1px solid #3a4050;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   color: inherit;
   padding: 6px 12px;
@@ -370,7 +397,7 @@ body.web-fullscreen .web-bookmarks {
 }
 
 .web-fullscreen-bar button:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 #web-fullscreen-pencil {
@@ -404,8 +431,8 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   align-items: center;
   gap: 16px;
   padding: 48px 64px;
-  background: #1d2026;
-  border: 2px dashed #3a4050;
+  background: var(--surface);
+  border: 2px dashed var(--border-strong);
   border-radius: 24px;
   color: inherit;
   font-size: 20px;
@@ -413,14 +440,14 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 }
 
 .big-plus-tile:hover {
-  border-color: #4c8dff;
-  background: #262a33;
+  border-color: var(--accent);
+  background: var(--surface-hover);
 }
 
 .big-plus-icon {
   font-size: 64px;
   line-height: 1;
-  color: #4c8dff;
+  color: var(--accent);
 }
 
 .file-browser {
@@ -434,8 +461,8 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: #1d2026;
-  border-bottom: 1px solid #2c303a;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -451,7 +478,7 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 }
 
 .crumb:hover {
-  background: #262a33;
+  background: var(--btn-bg);
   opacity: 1;
 }
 
@@ -461,7 +488,7 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 
 .crumb-change {
   margin-left: auto;
-  background: #262a33;
+  background: var(--btn-bg);
   border: none;
   color: inherit;
   font-size: 13px;
@@ -471,7 +498,7 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 }
 
 .crumb-change:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 .file-grid {
@@ -491,8 +518,8 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   justify-content: center;
   gap: 8px;
   height: 120px;
-  background: #1d2026;
-  border: 2px solid #2c303a;
+  background: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 14px;
   color: inherit;
   cursor: pointer;
@@ -501,8 +528,8 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 }
 
 .file-tile:hover {
-  border-color: #4c8dff;
-  background: #262a33;
+  border-color: var(--accent);
+  background: var(--surface-hover);
 }
 
 .file-tile-icon {
@@ -520,16 +547,16 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 
 .file-tile-add {
   border-style: dashed;
-  border-color: #3a4050;
+  border-color: var(--border-strong);
 }
 
 .file-tile-add .file-tile-icon {
-  color: #4c8dff;
+  color: var(--accent);
   font-size: 32px;
 }
 
 .file-tile-add:hover {
-  border-color: #4c8dff;
+  border-color: var(--accent);
 }
 
 /* --- pdf viewer --- */
@@ -544,14 +571,14 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #1d2026;
-  border-bottom: 1px solid #2c303a;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .pdf-toolbar button {
   font-size: 14px;
-  background: #262a33;
+  background: var(--btn-bg);
   border: none;
   border-radius: 6px;
   color: inherit;
@@ -560,7 +587,7 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
 }
 
 .pdf-toolbar button:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 #pdf-fullscreen {
@@ -667,8 +694,8 @@ body.web-fullscreen .pencil-fs-btn {
   width: 160px;
   flex-shrink: 0;
   overflow-y: auto;
-  background: #16181d;
-  border-right: 1px solid #2c303a;
+  background: var(--surface-alt);
+  border-right: 1px solid var(--border);
   padding: 12px 8px;
   display: flex;
   flex-direction: column;
@@ -692,7 +719,7 @@ body.web-fullscreen .pencil-fs-btn {
   display: block;
   border-radius: 4px;
   background: #0b0c0f;
-  box-shadow: 0 0 0 1px #2c303a;
+  box-shadow: 0 0 0 1px var(--border);
 }
 
 .pptx-thumb-label {
@@ -701,16 +728,16 @@ body.web-fullscreen .pencil-fs-btn {
 }
 
 .pptx-thumb:hover {
-  border-color: #3a4050;
+  border-color: var(--border-strong);
 }
 
 .pptx-thumb.active {
-  border-color: #4c8dff;
+  border-color: var(--accent);
 }
 
 .pptx-thumb.active .pptx-thumb-label {
   opacity: 1;
-  color: #4c8dff;
+  color: var(--accent);
 }
 
 .pptx-main-wrap {
@@ -818,8 +845,8 @@ body.web-fullscreen .pptx-rail {
 .widgets-menu {
   position: fixed;
   z-index: 20;
-  background: #1d2026;
-  border: 1px solid #333844;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 10px;
   padding: 6px;
   display: flex;
@@ -839,7 +866,7 @@ body.web-fullscreen .pptx-rail {
 }
 
 .widgets-menu button:hover {
-  background: #262a33;
+  background: var(--btn-bg);
 }
 
 /* --- settings menu --- */
@@ -848,8 +875,8 @@ body.web-fullscreen .pptx-rail {
   top: 52px;
   right: 16px;
   z-index: 40;
-  background: #1d2026;
-  border: 1px solid #333844;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   padding: 14px;
   display: flex;
@@ -908,13 +935,13 @@ body.web-fullscreen .pptx-rail {
 
 .settings-btn-neutral {
   width: 100%;
-  background: #262a33;
-  border: 1px solid #3a4050;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
   color: inherit;
 }
 
 .settings-btn-neutral:hover {
-  background: #323744;
+  background: var(--surface-hover);
 }
 
 .settings-row-inline {
@@ -929,8 +956,8 @@ body.web-fullscreen .pptx-rail {
 .settings-icon-btn {
   flex-shrink: 0;
   width: 40px;
-  background: #262a33;
-  border: 1px solid #3a4050;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   color: inherit;
   font-size: 16px;
@@ -938,7 +965,75 @@ body.web-fullscreen .pptx-rail {
 }
 
 .settings-icon-btn:hover {
-  background: #323744;
+  background: var(--surface-hover);
+}
+
+.settings-row-switcher {
+  justify-content: space-between;
+}
+
+.settings-version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.settings-update-status {
+  font-size: 12px;
+  opacity: 0.7;
+  min-height: 14px;
+  margin-top: -6px;
+}
+
+/* --- перемикач (світла тема) --- */
+.switcher {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.switcher input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switcher-track {
+  position: absolute;
+  inset: 0;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.switcher-track::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  top: 2px;
+  background: var(--text);
+  opacity: 0.6;
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+
+.switcher input:checked + .switcher-track {
+  border-color: var(--accent);
+}
+
+.switcher input:checked + .switcher-track::before {
+  transform: translateX(18px);
+  background: var(--accent);
+  opacity: 1;
 }
 
 /* --- update banner --- */

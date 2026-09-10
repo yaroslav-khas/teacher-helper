@@ -72,10 +72,12 @@ window.boardApi.window.isFullscreen().then((isFullscreen) => {
 
 // --- налаштування ---
 const ALWAYS_FULLSCREEN_KEY = 'settings:always-fullscreen';
+const LIGHT_THEME_KEY = 'settings:light-theme';
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsMenu = document.getElementById('settings-menu');
 const alwaysFullscreenCheckbox = document.getElementById('settings-always-fullscreen');
 const autoLaunchCheckbox = document.getElementById('settings-auto-launch');
+const lightThemeCheckbox = document.getElementById('settings-light-theme');
 
 settingsToggle.addEventListener('pointerdown', async (e) => {
   e.stopPropagation();
@@ -85,7 +87,22 @@ settingsToggle.addEventListener('pointerdown', async (e) => {
   }
   alwaysFullscreenCheckbox.checked = Boolean(await window.boardApi.store.get(ALWAYS_FULLSCREEN_KEY));
   autoLaunchCheckbox.checked = await window.boardApi.window.getAutoLaunch();
+  lightThemeCheckbox.checked = Boolean(await window.boardApi.store.get(LIGHT_THEME_KEY));
   settingsMenu.hidden = false;
+});
+
+// --- тема ---
+function applyTheme(isLight) {
+  document.documentElement.classList.toggle('theme-light', isLight);
+}
+// Застосовуємо збережену тему одразу при завантаженні, не чекаючи відкриття
+// налаштувань — інакше вчитель бачив би темну тему кожного разу до першого
+// відкриття ⚙️.
+window.boardApi.store.get(LIGHT_THEME_KEY).then((isLight) => applyTheme(Boolean(isLight)));
+
+lightThemeCheckbox.addEventListener('change', () => {
+  window.boardApi.store.set(LIGHT_THEME_KEY, lightThemeCheckbox.checked);
+  applyTheme(lightThemeCheckbox.checked);
 });
 
 document.addEventListener('pointerdown', (e) => {
@@ -127,6 +144,40 @@ document.getElementById('settings-anthem-gear').addEventListener('pointerdown', 
   e.stopPropagation();
   const chosen = await window.boardApi.anthem.chooseFile();
   if (chosen) await window.boardApi.store.set('anthem:path', chosen);
+});
+
+// --- версія і ручна перевірка оновлень ---
+const versionLabel = document.getElementById('settings-version-label');
+const checkUpdateBtn = document.getElementById('settings-check-update');
+const updateStatusEl = document.getElementById('settings-update-status');
+
+window.boardApi.window.getVersion().then(({ version, electron }) => {
+  versionLabel.textContent = `Версія: ${version} (білд Electron ${electron})`;
+});
+
+checkUpdateBtn.addEventListener('pointerdown', async (e) => {
+  e.stopPropagation();
+  updateStatusEl.textContent = 'Перевірка…';
+  try {
+    await window.boardApi.updater.checkNow();
+  } catch {
+    // Портативна збірка не має конфігурації для перевірки — чесно про це
+    // повідомляємо, а не лишаємо кнопку виглядати "мертвою".
+    updateStatusEl.textContent = 'Перевірка недоступна для цієї збірки (portable)';
+  }
+});
+
+window.boardApi.updater.onEvent('updater:checking', () => {
+  updateStatusEl.textContent = 'Перевірка…';
+});
+window.boardApi.updater.onEvent('updater:none', () => {
+  updateStatusEl.textContent = 'Встановлено останню версію';
+});
+window.boardApi.updater.onEvent('updater:available', () => {
+  updateStatusEl.textContent = '';
+});
+window.boardApi.updater.onEvent('updater:error', () => {
+  updateStatusEl.textContent = 'Не вдалося перевірити оновлення';
 });
 
 // --- хвилина мовчання (щодня о 9:00) ---

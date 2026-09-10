@@ -152,6 +152,12 @@ function registerShellIpc(): void {
     shellWindow?.close();
   });
 
+  ipcMain.handle('shell:get-version', () => ({
+    version: app.getVersion(),
+    electron: process.versions.electron,
+    chrome: process.versions.chrome,
+  }));
+
   ipcMain.handle('shell:get-auto-launch', () => app.getLoginItemSettings().openAtLogin);
 
   ipcMain.handle('shell:set-auto-launch', (_event, enabled: boolean) => {

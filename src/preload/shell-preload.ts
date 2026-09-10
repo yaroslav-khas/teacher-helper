@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('boardApi', {
     quit: () => ipcRenderer.invoke('shell:quit'),
     getAutoLaunch: () => ipcRenderer.invoke('shell:get-auto-launch'),
     setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('shell:set-auto-launch', enabled),
+    getVersion: () => ipcRenderer.invoke('shell:get-version'),
   },
   overlay: {
     show: () => ipcRenderer.invoke('overlay:show'),
@@ -76,6 +77,7 @@ contextBridge.exposeInMainWorld('boardApi', {
   updater: {
     download: () => ipcRenderer.invoke('updater:download'),
     quitAndInstall: () => ipcRenderer.invoke('updater:quit-and-install'),
+    checkNow: () => ipcRenderer.invoke('updater:check-now'),
     onEvent: (channel: string, callback: (payload: unknown) => void) => {
       const listener = (_event: unknown, payload: unknown) => callback(payload);
       ipcRenderer.on(channel, listener);
