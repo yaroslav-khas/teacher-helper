@@ -8,7 +8,7 @@ function fileLibExtOf(name) {
 
 function fileLibExtIcon(name) {
   const ext = fileLibExtOf(name);
-  if (['pptx', 'ppt', 'key', 'odp'].includes(ext)) return '📊';
+  if (['pptx', 'ppt', 'ppsx', 'pps', 'key', 'odp'].includes(ext)) return '📊';
   if (ext === 'pdf') return '📕';
   if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext)) return '🖼️';
   if (['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v'].includes(ext)) return '🎬';
@@ -127,19 +127,32 @@ window.renderFileLibrary = async function renderFileLibrary(container, config) {
     });
     gridEl.appendChild(addBtn);
 
+    const PREVIEWABLE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
+
     entries.forEach((entry) => {
       const tile = document.createElement('button');
       tile.className = 'file-tile';
 
-      const iconEl = document.createElement('span');
-      iconEl.className = 'file-tile-icon';
-      iconEl.textContent = entry.isDirectory ? '📁' : fileLibExtIcon(entry.name);
+      // Фото показуємо як справжнє мініпревʼю замість іконки — набагато
+      // легше впізнати потрібний файл серед купи однаково підписаних сканів.
+      if (!entry.isDirectory && PREVIEWABLE_EXTS.includes(fileLibExtOf(entry.name))) {
+        const previewEl = document.createElement('img');
+        previewEl.className = 'file-tile-preview';
+        previewEl.src = `file://${entry.fullPath}`;
+        previewEl.alt = '';
+        previewEl.loading = 'lazy';
+        tile.appendChild(previewEl);
+      } else {
+        const iconEl = document.createElement('span');
+        iconEl.className = 'file-tile-icon';
+        iconEl.textContent = entry.isDirectory ? '📁' : fileLibExtIcon(entry.name);
+        tile.appendChild(iconEl);
+      }
 
       const nameEl = document.createElement('span');
       nameEl.className = 'file-tile-name';
       nameEl.textContent = entry.name;
 
-      tile.appendChild(iconEl);
       tile.appendChild(nameEl);
       tile.addEventListener('click', () => {
         if (entry.isDirectory) {

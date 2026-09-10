@@ -196,7 +196,7 @@ if (gotSingleInstanceLock) {
       'presentation',
       'presentation:root',
       'Обрати папку з презентаціями',
-      [{ name: 'Презентації', extensions: ['pptx', 'ppt'] }],
+      [{ name: 'Презентації', extensions: ['pptx', 'ppt', 'ppsx', 'pps', 'odp', 'key'] }],
       () => shellWindow,
     );
     registerFileLibraryIpc(

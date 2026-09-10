@@ -553,6 +553,13 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   font-size: 36px;
 }
 
+.file-tile-preview {
+  width: 100%;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 .file-tile-name {
   font-size: 13px;
   text-align: center;
@@ -764,6 +771,10 @@ body.web-fullscreen .pencil-fs-btn {
   justify-content: center;
   overflow: hidden;
   background: #0b0c0f;
+  /* Без цього горизонтальний свайп на тачскріні браузер міг трактувати як
+     жест гортання/скролу замість передачі його в pointerdown/pointerup
+     обробники свайпу нижче — свайп між слайдами просто не спрацьовував. */
+  touch-action: none;
 }
 
 .pptx-main-canvas {
@@ -788,8 +799,12 @@ body.web-fullscreen .pptx-rail {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: auto;
+  overflow: hidden;
   background: #0b0c0f;
+  /* Пан/pinch-zoom тепер керуються вручну через transform у JS — без цього
+     дотик на тачскріні браузер сприймав би як власний жест скролу/зуму
+     замість передачі його в наші pointer-обробники. */
+  touch-action: none;
 }
 
 .image-el {
@@ -797,13 +812,10 @@ body.web-fullscreen .pptx-rail {
   max-height: 100%;
   object-fit: contain;
   cursor: zoom-in;
+  transform-origin: center center;
 }
 
 .image-el.zoomed {
-  max-width: none;
-  max-height: none;
-  width: auto;
-  height: auto;
   cursor: zoom-out;
 }
 

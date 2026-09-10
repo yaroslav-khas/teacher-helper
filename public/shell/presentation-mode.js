@@ -1,9 +1,13 @@
 (() => {
   const state = { root: null, current: null };
 
-  function isPptx(name) {
+  // Живий перегляд у застосунку вміє лише сучасний OOXML-формат (.pptx/.ppsx —
+  // це той самий ZIP/XML під капотом, .ppsx просто позначений як "показ").
+  // Легасі .ppt, .pps, а також .odp (OpenDocument) і .key (Keynote) — зовсім
+  // інші формати файлів, для них лишається "відкрити зовні".
+  function isOoxml(name) {
     const ext = (name.split('.').pop() || '').toLowerCase();
-    return ext === 'pptx' || ext === 'ppt';
+    return ext === 'pptx' || ext === 'ppsx';
   }
 
   window.boardModes.presentation = {
@@ -14,9 +18,9 @@
         api: window.boardApi.presentation,
         state,
         chooseLabel: 'Обрати папку з презентаціями',
-        extensions: ['pptx', 'ppt'],
+        extensions: ['pptx', 'ppt', 'ppsx', 'pps', 'odp', 'key'],
         onOpenFile: (entry, _siblings, goBackToFolder) => {
-          if (isPptx(entry.name)) {
+          if (isOoxml(entry.name)) {
             window.renderPptxViewer(container, entry.fullPath, goBackToFolder);
           } else {
             window.boardApi.presentation.openFile(entry.fullPath);
