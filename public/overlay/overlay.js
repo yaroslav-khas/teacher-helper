@@ -27,18 +27,10 @@ canvas.addEventListener('pointerdown', (e) => {
   drawing = true;
   lastX = e.clientX;
   lastY = e.clientY;
-  // Без явного захоплення вказівника швидкий мазок пальцем на тачскріні
-  // (де координати "шумлять" сильніше за мишу) міг на мить вискочити за межі
-  // canvas — і подальші pointermove йшли вже повз нього, лінія обривалась,
-  // виглядало як "зависання" панелі. setPointerCapture прив'язує весь цей
-  // конкретний дотик до canvas незалежно від фактичних координат.
-  canvas.setPointerCapture(e.pointerId);
-  e.preventDefault();
 });
 
 canvas.addEventListener('pointermove', (e) => {
   if (!drawing) return;
-  e.preventDefault();
   const pressure = e.pressure > 0 ? e.pressure : 0.5;
   ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
   ctx.strokeStyle = color;
