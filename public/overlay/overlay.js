@@ -30,13 +30,20 @@ function fillHitTestBase() {
 
 // Ластик (destination-out) прибирає й цю базову заливку в стертій області,
 // повертаючи їй справжню alpha=0 — тобто щойно стерта пляма ставала б знову
-// непроклацуваною "дірою". destination-over домальовує заливку рівно туди,
-// де альфа впала нижче 1, не займаючи вже намальовані лінії.
-function reinforceHitTestBase() {
+// непроклацуваною "дірою". destination-over домальовує заливку рівно вздовж
+// щойно стертого штриха (а НЕ по всьому canvas — так було спочатку, і саме
+// це давало видиму сіру "мряку": кожен виклик під час руху миші повторно
+// заливав усе полотно, і десятки викликів на секунду накопичувались у
+// помітне затемнення).
+function reinforceHitTestBase(x1, y1, x2, y2, lineWidth) {
   ctx.save();
   ctx.globalCompositeOperation = 'destination-over';
-  ctx.fillStyle = HIT_TEST_FILL;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = HIT_TEST_FILL;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -83,16 +90,17 @@ canvas.addEventListener('pointerdown', (e) => {
 canvas.addEventListener('pointermove', (e) => {
   if (!drawing) return;
   const pressure = e.pressure > 0 ? e.pressure : 0.5;
+  const lineWidth = baseWidth * (0.5 + pressure);
   ctx.globalCompositeOperation = erasing ? 'destination-out' : 'source-over';
   ctx.strokeStyle = color;
-  ctx.lineWidth = baseWidth * (0.5 + pressure);
+  ctx.lineWidth = lineWidth;
   ctx.beginPath();
   ctx.moveTo(lastX, lastY);
   ctx.lineTo(e.clientX, e.clientY);
   ctx.stroke();
+  if (erasing) reinforceHitTestBase(lastX, lastY, e.clientX, e.clientY, lineWidth);
   lastX = e.clientX;
   lastY = e.clientY;
-  if (erasing) reinforceHitTestBase();
 });
 
 window.addEventListener('pointerup', () => {
@@ -147,6 +155,12 @@ function applyIgnoreState() {
     currentIgnore = shouldIgnore;
     window.overlayApi.setIgnoreMouseEvents(shouldIgnore);
   }
+  // Коли клік дійсно проходить крізь вікно до програми під низом, ОС
+  // намагається показати курсор ТІЄЇ програми, а наш canvas одночасно
+  // нав'язує власний cursor:crosshair — звідси видимий конфлікт/мерехтіння
+  // двох курсорів одночасно. Ховаємо прицільний курсор саме на час
+  // пропускання кліків, лишаючи керування курсором вікну під низом.
+  canvas.style.cursor = shouldIgnore ? 'default' : 'crosshair';
 }
 
 function setPassThrough(next) {
