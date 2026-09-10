@@ -46,7 +46,8 @@
       {
         "provider": "github",
         "owner": "yaroslav-khas",
-        "repo": "teacher-helper"
+        "repo": "teacher-helper",
+        "draft": false
       }
     ]
   }
