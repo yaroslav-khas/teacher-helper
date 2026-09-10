@@ -69,6 +69,29 @@
     `;
   }
 
+  // Анімований прапор на фоні — без відеофайлу (немає звідки його чесно
+  // взяти й ліцензувати в застосунок): SVG-шум (feTurbulence) деформує два
+  // кольорові прямокутники через feDisplacementMap, і сама деформація
+  // анімується — це дає переконливий ефект "маяння на вітрі" з чистого CSS/SVG.
+  function buildFlagBackground() {
+    return `
+      <svg class="silence-flag-bg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <filter id="flag-wave" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="2" seed="7" result="noise">
+              <animate attributeName="baseFrequency" dur="10s" values="0.012 0.04;0.016 0.05;0.012 0.04" repeatCount="indefinite" />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+        <g filter="url(#flag-wave)">
+          <rect x="0" y="0" width="400" height="150" fill="#0057b7" />
+          <rect x="0" y="150" width="400" height="150" fill="#ffd700" />
+        </g>
+      </svg>
+    `;
+  }
+
   // Годинна й хвилинна стрілки завжди показують рівно 9:00 (символічний
   // момент початку хвилини мовчання) — рухається лише секундна, і саме вона
   // й є таймером: один повний оберт за ці 60 секунд.
@@ -83,6 +106,7 @@
     render: (container) => {
       container.innerHTML = `
         <div class="silence-view">
+          ${buildFlagBackground()}
           <div id="silence-clock-phase" class="silence-clock-phase">
             <div class="silence-clock-wrap">${buildClockFace()}</div>
             <div class="silence-caption">Хвилина мовчання</div>

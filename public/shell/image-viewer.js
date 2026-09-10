@@ -94,14 +94,18 @@
       onBack?.();
     });
 
-    async function exitFullscreenIfActive() {
+    function exitFullscreenIfActive() {
       if (!isFullscreenActive) return;
       isFullscreenActive = false;
       document.body.classList.remove('web-fullscreen');
     }
 
-    async function toggleFullscreen() {
-      isFullscreenActive = await window.boardApi.window.toggleFullscreen();
+    // Лише ховає нашу панель — НЕ чіпає стан вікна самої програми. Раніше
+    // обидва були сплутані в один виклик toggleFullscreen() вікна: якщо
+    // застосунок уже був у справжньому OS-фулскріні, ця кнопка натомість
+    // ВИМИКАЛА його (бо isFullScreen() вже true) — виглядало як "мінімізує".
+    function toggleFullscreen() {
+      isFullscreenActive = !document.body.classList.contains('web-fullscreen');
       document.body.classList.toggle('web-fullscreen', isFullscreenActive);
       exitFsBtn.hidden = !isFullscreenActive;
       if (!isFullscreenActive) window.boardApi.overlay.hide();

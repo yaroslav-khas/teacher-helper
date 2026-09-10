@@ -14,6 +14,15 @@ const BOARD_TOOLS = [
   { icon: '📌', label: 'Padlet', url: 'https://padlet.com' },
 ];
 
+const UKRAINIAN_SERVICES = [
+  { icon: '📚', label: 'На Урок', url: 'https://naurok.ua' },
+  { icon: '🏫', label: 'Всеукраїнська школа онлайн', url: 'https://lms.e-school.net.ua' },
+  { icon: '🎓', label: 'EdEra', url: 'https://ed-era.com' },
+  { icon: '🧑‍🎓', label: 'Prometheus', url: 'https://prometheus.org.ua' },
+  { icon: '🖇️', label: 'МійКлас', url: 'https://www.miyklas.com.ua' },
+  { icon: '🇺🇦', label: 'Дія.Освіта', url: 'https://osvita.diia.gov.ua' },
+];
+
 function renderLinkRow(title, items) {
   const section = document.createElement('section');
   section.className = 'home-links-section';
@@ -48,6 +57,7 @@ window.boardModes = {
       grid.className = 'home-grid';
 
       const tiles = [
+        { id: 'schedule', icon: '🗓️', label: 'Розклад' },
         { id: 'web', icon: '🌐', label: 'Веб' },
         { id: 'media', icon: '▶️', label: 'Медіа' },
         { id: 'presentation', icon: '📊', label: 'Презентація' },
@@ -67,6 +77,7 @@ window.boardModes = {
       scroller.appendChild(grid);
       scroller.appendChild(renderLinkRow('Інтерактивні тулзи для учнів', STUDENT_TOOLS));
       scroller.appendChild(renderLinkRow('Інструменти для роботи з дошкою', BOARD_TOOLS));
+      scroller.appendChild(renderLinkRow('Українські освітні сервіси', UKRAINIAN_SERVICES));
       container.appendChild(scroller);
     },
   },

@@ -82,8 +82,8 @@ function attachActiveTab(shellWindow: BrowserWindow): void {
   active.view.setBounds(lastBounds);
 }
 
-function detachTab(shellWindow: BrowserWindow, tab: Tab): void {
-  pauseMedia(tab);
+function detachTab(shellWindow: BrowserWindow, tab: Tab, pause = true): void {
+  if (pause) pauseMedia(tab);
   shellWindow.contentView.removeChildView(tab.view);
 }
 
@@ -99,6 +99,15 @@ export function showWebView(shellWindow: BrowserWindow, bounds: Electron.Rectang
 export function hideWebView(shellWindow: BrowserWindow): void {
   const active = findTab(activeTabId);
   if (active) detachTab(shellWindow, active);
+}
+
+// Для короткочасного показу DOM-попапу (налаштування, банер) поверх активної
+// вкладки — на відміну від hideWebView (перемикання вкладки/вихід з режиму),
+// тут відео/аудіо навмисно НЕ ставиться на паузу: попап видно секунди,
+// зупиняти через нього перегляд було б небажаним побічним ефектом.
+export function hideWebViewForPopup(shellWindow: BrowserWindow): void {
+  const active = findTab(activeTabId);
+  if (active) detachTab(shellWindow, active, false);
 }
 
 export function setWebViewBounds(bounds: Electron.Rectangle): void {
@@ -125,6 +134,11 @@ export function registerWebViewIpc(getShellWindow: () => BrowserWindow | null): 
   ipcMain.on('web:hide', () => {
     const shellWindow = getShellWindow();
     if (shellWindow) hideWebView(shellWindow);
+  });
+
+  ipcMain.on('web:hide-for-popup', () => {
+    const shellWindow = getShellWindow();
+    if (shellWindow) hideWebViewForPopup(shellWindow);
   });
 
   ipcMain.on('web:set-bounds', (_event, bounds: Electron.Rectangle) => {

@@ -87,16 +87,31 @@ const alwaysFullscreenCheckbox = document.getElementById('settings-always-fullsc
 const autoLaunchCheckbox = document.getElementById('settings-auto-launch');
 const lightThemeCheckbox = document.getElementById('settings-light-theme');
 
-settingsToggle.addEventListener('pointerdown', async (e) => {
-  e.stopPropagation();
-  if (!settingsMenu.hidden) {
-    settingsMenu.hidden = true;
-    return;
-  }
+// WebContentsView (вбудований браузер у "Веб") — нативний шар, який завжди
+// рендериться поверх DOM хоста незалежно від z-index, тож попап налаштувань
+// інакше опинявся б під відкритим сайтом. window.setWebViewVisible існує,
+// лише коли активний режим "Веб" (визначається в web-mode.js).
+function closeSettingsMenu() {
+  if (settingsMenu.hidden) return;
+  settingsMenu.hidden = true;
+  window.setWebViewVisible?.(true);
+}
+
+async function openSettingsMenu() {
+  window.setWebViewVisible?.(false);
   alwaysFullscreenCheckbox.checked = Boolean(await window.boardApi.store.get(ALWAYS_FULLSCREEN_KEY));
   autoLaunchCheckbox.checked = await window.boardApi.window.getAutoLaunch();
   lightThemeCheckbox.checked = Boolean(await window.boardApi.store.get(LIGHT_THEME_KEY));
   settingsMenu.hidden = false;
+}
+
+settingsToggle.addEventListener('pointerdown', (e) => {
+  e.stopPropagation();
+  if (!settingsMenu.hidden) {
+    closeSettingsMenu();
+    return;
+  }
+  openSettingsMenu();
 });
 
 // --- тема ---
@@ -115,7 +130,7 @@ lightThemeCheckbox.addEventListener('change', () => {
 
 document.addEventListener('pointerdown', (e) => {
   if (!settingsMenu.hidden && !settingsMenu.contains(e.target) && e.target !== settingsToggle) {
-    settingsMenu.hidden = true;
+    closeSettingsMenu();
   }
 });
 
@@ -133,6 +148,10 @@ document.getElementById('settings-minimize').addEventListener('pointerdown', () 
 
 document.getElementById('settings-quit').addEventListener('pointerdown', () => {
   window.boardApi.window.quit();
+});
+
+document.getElementById('settings-view-logs').addEventListener('pointerdown', () => {
+  window.boardApi.logs.openWindow();
 });
 
 document.getElementById('settings-silence-now').addEventListener('pointerdown', () => {
@@ -226,9 +245,13 @@ document.getElementById('silence-open').addEventListener('pointerdown', () => {
 
 document.getElementById('silence-dismiss').addEventListener('pointerdown', () => {
   silenceBanner.hidden = true;
+  window.setWebViewVisible?.(true);
 });
 
 window.boardApi.momentOfSilence.onTrigger(() => {
+  // Той самий бар'єр, що й для попапу налаштувань — WebContentsView відкритої
+  // сторінки інакше сховав би цей банер під собою.
+  window.setWebViewVisible?.(false);
   silenceBanner.hidden = false;
   playSilenceAlert();
 });
@@ -239,6 +262,30 @@ function tickClock() {
 }
 tickClock();
 setInterval(tickClock, 1000);
+
+// --- заряд акумулятора біля годинника ---
+// У повноекранному режимі вчитель не бачить індикатор заряду Windows
+// (панель задач схована), тож дублюємо його тут. Показуємо, лише якщо
+// Battery Status API взагалі щось повернув — на десктопі без акумулятора
+// цей блок просто ніколи не з'явиться.
+const topbarBattery = document.getElementById('topbar-battery');
+if (navigator.getBattery) {
+  navigator
+    .getBattery()
+    .then((battery) => {
+      function updateBattery() {
+        const pct = Math.round(battery.level * 100);
+        topbarBattery.textContent = `${battery.charging ? '⚡' : '🔋'} ${pct}%`;
+        topbarBattery.hidden = false;
+      }
+      updateBattery();
+      battery.addEventListener('levelchange', updateBattery);
+      battery.addEventListener('chargingchange', updateBattery);
+    })
+    .catch(() => {
+      // Battery Status API недоступний у цій збірці Electron — просто не показуємо блок.
+    });
+}
 
 // --- update banner ---
 const banner = document.getElementById('update-banner');
@@ -273,3 +320,64 @@ bannerAction.addEventListener('click', () => {
 bannerDismiss.addEventListener('click', () => {
   banner.hidden = true;
 });
+
+// --- розклад: сповіщення "до кінця уроку лишилось 10 хв" ---
+// Перевіряється глобально (не лише коли відкрита вкладка "Розклад") — на
+// самому уроці вчитель зазвичай дивиться в презентацію чи браузер, а не в
+// таблицю розкладу, тож сповіщення має долетіти звідусіль.
+const lessonBanner = document.getElementById('lesson-banner');
+const lessonBannerText = document.getElementById('lesson-banner-text');
+let lastNotifiedLessonKey = null;
+
+function playLessonChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.6);
+  } catch {
+    // Web Audio недоступний — тиша не критична.
+  }
+}
+
+async function checkLessonEndingSoon() {
+  if (!window.computeScheduleStatus || !window.loadScheduleData) return;
+  const { times, subjects } = await window.loadScheduleData();
+  const status = window.computeScheduleStatus(times, subjects);
+  if (!status.dayName || status.onBreak || status.periodIndex == null) return;
+  if (status.remainingMinutes > 10 || status.remainingMinutes <= 0) return;
+
+  const key = `${status.dayName}-${status.periodIndex}`;
+  if (lastNotifiedLessonKey === key) return;
+  lastNotifiedLessonKey = key;
+
+  const text = `⏰ До кінця уроку «${status.subject || 'поточний урок'}» лишилось ${status.remainingMinutes} хв`;
+  window.setWebViewVisible?.(false);
+  lessonBannerText.textContent = text;
+  lessonBanner.hidden = false;
+  playLessonChime();
+
+  if (window.Notification) {
+    try {
+      new Notification('Розклад уроків', { body: text });
+    } catch {
+      // Ігноруємо — банер у самому застосунку вже показано.
+    }
+  }
+}
+
+document.getElementById('lesson-banner-dismiss').addEventListener('pointerdown', () => {
+  lessonBanner.hidden = true;
+  window.setWebViewVisible?.(true);
+});
+
+setInterval(checkLessonEndingSoon, 30_000);
+checkLessonEndingSoon();

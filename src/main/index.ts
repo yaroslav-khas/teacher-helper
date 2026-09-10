@@ -14,6 +14,8 @@ import { registerFileLibraryIpc } from './fileLibrary';
 import { configureUpdater } from './updater';
 import { startMomentOfSilenceScheduler, registerMomentOfSilenceTestIpc } from './momentOfSilence';
 import { showSplashWindow, closeSplashWindow } from './splashWindow';
+import { initLogger, registerLoggerIpc, logLine } from './logger';
+import { registerLogWindowIpc } from './logWindow';
 
 // На класних ПК дошка часто працює через дубльований/клонований дисплей
 // (проектор). Апаратне відеодекодування Chromium на клонованому виведенні
@@ -66,6 +68,11 @@ function createShellWindow(): void {
 
   shellWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
     console.log('[shell renderer]', level, message, `(${sourceId}:${line})`);
+    // Рівень 2+ у цьому API — вже warning/error, найцінніше для діагностики
+    // "щось зламалось на Windows" без доступу до девтулзів вчителя.
+    if (level >= 2) {
+      logLine('RENDERER', `${message} (${sourceId}:${line})`);
+    }
   });
 
   shellWindow.on('enter-full-screen', () => {
@@ -143,6 +150,7 @@ function registerShellIpc(): void {
       // Тимчасова діагностика: якщо тут щось падає на Windows — побачимо це
       // прямо у нативному вікні, без потреби в консолі/девтулзах.
       dialog.showErrorBox('Помилка "Згорнути"', String(err));
+      logLine('ERROR', `shell:minimize failed: ${err}`);
     }
   });
 
@@ -187,6 +195,9 @@ if (gotSingleInstanceLock) {
   });
 
   app.whenReady().then(() => {
+    initLogger();
+    registerLoggerIpc();
+    registerLogWindowIpc();
     showSplashWindow();
     registerStoreIpc();
     registerShellIpc();

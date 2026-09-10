@@ -195,6 +195,21 @@
       resizeObserver = new ResizeObserver(syncBoundsNextFrame);
       resizeObserver.observe(anchor);
 
+      // WebContentsView — нативний шар, який завжди рендериться поверх DOM
+      // хоста (топбару, попапів налаштувань, банерів) незалежно від z-index.
+      // Єдиний спосіб показати DOM-попап "над" відкритим сайтом — тимчасово
+      // відʼєднати сам браузер, поки попап видимий, і повернути назад по
+      // закритті. shell.js викликає це перед показом будь-якого такого попапу.
+      // hideForPopup (а не звичайний hide) навмисно НЕ ставить відео на паузу —
+      // попап видно кілька секунд, зупиняти через нього перегляд не варто.
+      window.setWebViewVisible = function setWebViewVisible(visible) {
+        if (visible) {
+          window.boardApi.web.show(currentBounds(anchor));
+        } else {
+          window.boardApi.web.hideForPopup();
+        }
+      };
+
       // pointerdown, не click — коли WebContentsView тримає фокус, перший
       // click по власних кнопках вікна губиться на перефокусування.
       function submitUrl() {
@@ -269,6 +284,7 @@
       }
       document.body.classList.remove('web-fullscreen');
       window.boardApi.web.hide();
+      window.setWebViewVisible = null;
     },
   };
 

@@ -12,6 +12,11 @@
     <button id="update-dismiss">Пізніше</button>
   </div>
 
+  <div id="lesson-banner" class="update-banner lesson-banner" hidden>
+    <span id="lesson-banner-text"></span>
+    <button id="lesson-banner-dismiss">Гаразд</button>
+  </div>
+
   <div id="silence-banner" class="silence-banner" hidden>
     <div class="silence-banner-card">
       <span>🕯️ Розпочалася хвилина мовчання. Відкрити таймер?</span>
@@ -27,13 +32,17 @@
       <button data-mode="home" class="icon-btn active" title="Додому">🏠</button>
       <button id="pencil-toggle" class="icon-btn" title="Малювати поверх (Ctrl+Alt+M)">✏️</button>
       <button data-mode="whiteboard" class="icon-btn" title="Чистий аркуш">🗒️</button>
+      <button data-mode="schedule" class="icon-btn" title="Розклад">🗓️</button>
       <button data-mode="web" class="icon-btn" title="Веб">🌐</button>
       <button data-mode="media" class="icon-btn" title="Медіа (відео на комп'ютері)">▶️</button>
       <button data-mode="presentation" class="icon-btn" title="Презентація">📊</button>
       <button data-mode="image" class="icon-btn" title="Зображення">🖼️</button>
     </nav>
     <span id="current-mode-label" class="mode-label"></span>
-    <span id="topbar-clock" class="topbar-clock"></span>
+    <span class="topbar-right-group">
+      <span id="topbar-battery" class="topbar-battery" hidden></span>
+      <span id="topbar-clock" class="topbar-clock"></span>
+    </span>
     <button id="settings-toggle" class="icon-btn" title="Налаштування">⚙️</button>
     <button id="fullscreen-toggle" class="icon-btn" title="Повний екран">⛶</button>
   </header>
@@ -64,6 +73,7 @@
       <button id="settings-check-update" class="settings-icon-btn" title="Перевірити оновлення">🔄</button>
     </div>
     <div id="settings-update-status" class="settings-update-status"></div>
+    <button id="settings-view-logs" class="settings-btn settings-btn-neutral">📄 Переглянути логи</button>
     <div class="settings-actions">
       <button id="settings-minimize" class="settings-btn settings-btn-blue">Згорнути</button>
       <button id="settings-quit" class="settings-btn settings-btn-red">Вихід</button>
@@ -78,6 +88,7 @@
 
   <script src="modes.js"></script>
   <script src="whiteboard-mode.js"></script>
+  <script src="schedule-mode.js"></script>
   <script src="moment-of-silence.js"></script>
   <script src="anthem.js"></script>
   <script src="web-mode.js"></script>

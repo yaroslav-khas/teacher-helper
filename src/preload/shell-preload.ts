@@ -10,6 +10,9 @@ contextBridge.exposeInMainWorld('boardApi', {
     setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('shell:set-auto-launch', enabled),
     getVersion: () => ipcRenderer.invoke('shell:get-version'),
   },
+  logs: {
+    openWindow: () => ipcRenderer.invoke('logs:open-window'),
+  },
   overlay: {
     show: () => ipcRenderer.invoke('overlay:show'),
     hide: () => ipcRenderer.invoke('overlay:hide'),
@@ -18,6 +21,7 @@ contextBridge.exposeInMainWorld('boardApi', {
   web: {
     show: (bounds: Electron.Rectangle, url?: string) => ipcRenderer.send('web:show', bounds, url),
     hide: () => ipcRenderer.send('web:hide'),
+    hideForPopup: () => ipcRenderer.send('web:hide-for-popup'),
     setBounds: (bounds: Electron.Rectangle) => ipcRenderer.send('web:set-bounds', bounds),
     navigate: (url: string) => ipcRenderer.send('web:navigate', url),
     back: () => ipcRenderer.send('web:back'),
