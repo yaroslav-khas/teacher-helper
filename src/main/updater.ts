@@ -2,6 +2,16 @@ import { autoUpdater } from 'electron-updater';
 import { BrowserWindow, ipcMain } from 'electron';
 
 export function configureUpdater(shellWindow: BrowserWindow): void {
+  // electron-builder генерує app-update.yml (звідки electron-updater бере
+  // адресу перевірки) лише для NSIS-цілі — портативний .exe його не має
+  // взагалі, тож checkForUpdates() тут завжди мовчки провалиться. Це не
+  // виправна помилка з нашого боку, а свідомий вибір архітектури
+  // electron-builder: у portable немає ні фіксованого місця встановлення,
+  // ні реєстру, куди можна було б поставити оновлення.
+  if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    return;
+  }
+
   autoUpdater.autoDownload = false;
 
   const send = (channel: string, payload?: unknown) => {
