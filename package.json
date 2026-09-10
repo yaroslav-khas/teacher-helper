@@ -2,6 +2,7 @@
   "name": "teacher-board-helper",
   "version": "0.2.4",
   "description": "Єдиний інструмент для інтерактивної дошки",
+  "author": "Yaroslav Khas",
   "main": "dist/main/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run build:harness",
@@ -47,7 +48,7 @@
         "provider": "github",
         "owner": "yaroslav-khas",
         "repo": "teacher-helper",
-        "draft": false
+        "releaseType": "release"
       }
     ]
   }
