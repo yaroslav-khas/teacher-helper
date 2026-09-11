@@ -2,7 +2,10 @@ import { BrowserWindow, Notification, ipcMain } from 'electron';
 
 const TARGET_HOUR = 9;
 const TARGET_MINUTE = 0;
-const CHECK_INTERVAL_MS = 20_000;
+// 1с, а не 20с — символічна хвилина мовчання має починатись рівно о 9:00,
+// а не з відчутною затримкою в кілька-двадцять секунд. Порівняння дат —
+// дешева операція, раз на секунду це ніяк не позначається на навантаженні.
+const CHECK_INTERVAL_MS = 1_000;
 
 let lastTriggeredDateKey: string | null = null;
 

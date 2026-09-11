@@ -100,15 +100,35 @@ export function destroyOverlayWindow(): void {
 // створює окремий Space, і always-on-top вікна (включно з цим оверлеєм)
 // іноді "губляться", доки їхні прапорці не переустановити вже ПІСЛЯ
 // переходу. Викликати з shellWindow 'enter-full-screen'.
-export function reassertOverlayVisibility(): void {
+//
+// bounds (опційно) — актуальні межі дисплея на момент переходу. Без цього
+// оверлей лишався б із розмірами того вікна, яке було ДО переходу в
+// фулскрін: на Windows межі дисплея, які бачить Electron, можуть відрізнятись
+// до/після переходу (напр. через приховування панелі задач), і кнопки
+// панелі малювання/сама можливість малювати виявлялись зсунутими відносно
+// того, що реально видно на екрані — особливо помітно на тачскріні, де
+// дотик мапиться на абсолютні координати екрана значно жорсткіше за мишу.
+export function reassertOverlayVisibility(bounds?: Electron.Rectangle): void {
   if (!overlayWindow || overlayWindow.isDestroyed()) return;
   // Вікно оверлею не знищується при "схованні" (лишається живим для швидкого
   // повторного показу), тому без цієї перевірки переустановка прапорців
   // випадково повертала на екран оверлей, який мав лишатись прихованим.
   if (!overlayWindow.isVisible()) return;
+  if (bounds) overlayWindow.setBounds(bounds);
   overlayWindow.setAlwaysOnTop(true, 'screen-saver');
   overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   overlayWindow.moveTop();
+  // setBounds() — це саме та зміна вікна, після якої Windows може "загубити"
+  // реєстрацію хіт-тесту (звідси й потреба в kickHitTesting при кожному показі
+  // в showOverlayWindow нижче). Без повтору тут кнопки тулбару могли б час від
+  // часу переставати реагувати на дотик саме після переходу у/з фулскріну,
+  // хоча самі вони лишались на своєму місці й видимі.
+  kickHitTesting(overlayWindow);
+}
+
+export function getShellDisplayBounds(shellWindow: BrowserWindow | null): Electron.Rectangle {
+  const display = shellWindow ? screen.getDisplayMatching(shellWindow.getBounds()) : screen.getPrimaryDisplay();
+  return display.bounds;
 }
 
 export function getDisplayBoundsUnderCursor(): Electron.Rectangle {

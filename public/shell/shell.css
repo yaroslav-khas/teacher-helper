@@ -1079,6 +1079,10 @@ body.web-fullscreen .pptx-rail {
 }
 
 /* --- update banner --- */
+/* Ці банери мають фіксований темний фон незалежно від теми (акцентний колір,
+   не "поверхня" застосунку) — текст тому теж має бути явно світлим, а не
+   успадкованим var(--text): у світлій темі той стає темним, і напис стає
+   темним по темному, зовсім не видно, що написано. */
 .update-banner {
   display: flex;
   align-items: center;
@@ -1087,6 +1091,7 @@ body.web-fullscreen .pptx-rail {
   background: #2c4a80;
   border-bottom: 1px solid #3a5c9c;
   font-size: 14px;
+  color: #f2f2f2;
 }
 
 .update-banner button {
@@ -1107,6 +1112,7 @@ body.web-fullscreen .pptx-rail {
 .lesson-banner {
   background: #7a4a12;
   border-bottom: 1px solid #a5651a;
+  color: #f2f2f2;
 }
 
 .lesson-banner button {
@@ -1138,6 +1144,7 @@ body.web-fullscreen .pptx-rail {
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6);
   font-size: 18px;
   text-align: center;
+  color: #f2f2f2;
 }
 
 .silence-banner-actions {
@@ -1164,6 +1171,9 @@ body.web-fullscreen .pptx-rail {
 }
 
 /* --- хвилина мовчання: класичний годинник --- */
+/* Завжди темний фон (як відеоплеєр) незалежно від теми — тому і текст
+   (.silence-caption тощо) тут явно світлий, а не успадкований var(--text),
+   який у світлій темі став би темним по темному. */
 .silence-view {
   position: relative;
   height: 100%;
@@ -1173,6 +1183,7 @@ body.web-fullscreen .pptx-rail {
   justify-content: center;
   background: #0b0c0f;
   overflow: hidden;
+  color: #f2f2f2;
 }
 
 .silence-flag-bg {

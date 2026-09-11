@@ -8,6 +8,7 @@ import {
   hideOverlayWindow,
   getDisplayBoundsUnderCursor,
   reassertOverlayVisibility,
+  getShellDisplayBounds,
 } from './overlayWindow';
 import { registerWebViewIpc } from './webViewManager';
 import { registerFileLibraryIpc } from './fileLibrary';
@@ -75,9 +76,16 @@ function createShellWindow(): void {
     }
   });
 
-  shellWindow.on('enter-full-screen', () => {
-    reassertOverlayVisibility();
-  });
+  // На Windows межі дисплея, які повертає Electron, можуть відрізнятись
+  // до/після переходу застосунку в фулскрін (напр. через приховування
+  // панелі задач) — оверлей, показаний ДО переходу, лишався б із межами
+  // "вузького" довфулскрінного вікна: кнопки панелі малювання виглядали б
+  // на своєму місці, але фактичний хіт-тест був би зсунутий. Особливо
+  // помітно на тачскріні, де дотик жорсткіше мапиться на абсолютні
+  // координати екрана, ніж курсор миші.
+  const refreshOverlayBounds = () => reassertOverlayVisibility(getShellDisplayBounds(shellWindow));
+  shellWindow.on('enter-full-screen', refreshOverlayBounds);
+  shellWindow.on('leave-full-screen', refreshOverlayBounds);
 
   shellWindow.on('closed', () => {
     shellWindow = null;
