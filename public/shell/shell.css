@@ -539,22 +539,30 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   padding: 24px;
   overflow-y: auto;
   align-content: start;
+  /* Без цього grid розтягував би кожну плитку в рядку до висоти
+     найвищої — і короткі назви виглядали б з великими порожніми
+     проміжками знизу поруч із довгими. */
+  align-items: start;
 }
 
+/* Раніше висота була фіксована (120px) з overflow:hidden — довгі назви типу
+   академічних робіт обрізались, навіть коли назву дозволили переносити на
+   2 рядки (той перенос все одно впирався в ту саму жорстку стелю). Тепер
+   висота плитки вільно росте під довжину назви — обрізання більше немає
+   взагалі, лише мінімальна висота для однакового вигляду коротких назв. */
 .file-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 120px;
+  min-height: 120px;
   background: var(--surface);
   border: 2px solid var(--border);
   border-radius: 14px;
   color: inherit;
   cursor: pointer;
   padding: 8px;
-  overflow: hidden;
 }
 
 .file-tile:hover {
@@ -573,13 +581,15 @@ body:has(#web-fullscreen-bar:not([hidden])) .pencil-fs-btn {
   border-radius: 8px;
 }
 
+/* Без обмеження кількості рядків взагалі — плитка (.file-tile) тепер сама
+   росте під довжину назви (min-height замість фіксованої height), тож
+   обрізати тут уже нічого не треба: повна назва завжди повністю видима. */
 .file-tile-name {
   font-size: 13px;
   text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   max-width: 100%;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .file-tile-add {

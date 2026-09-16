@@ -1,13 +1,13 @@
 // =====================================================================
 // Оверлей малювання — прозоре always-on-top вікно поверх будь-якої програми.
-// Секції нижче: (1) canvas + Windows-хіт-тест фікс, (2) стан малювання й
-// сам draw loop, (3) кнопки панелі (колір/ластик/очистити/закрити),
-// (4) "пропускати кліки" (click-through), (5) перетягування панелі.
+// Тільки полотно: кнопки тепер живуть в окремому непрозорому toolbarWindow
+// (public/overlay-toolbar/), команди приходять сюди через IPC від main.
+// Секції: (1) canvas + Windows-хіт-тест фікс, (2) стан малювання й сам draw
+// loop, (3) команди з панелі (колір/товщина/ластик/очистити/click-through).
 // =====================================================================
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
-const toolbar = document.getElementById('toolbar');
 
 // --- (1) canvas + Windows-хіт-тест фікс -------------------------------
 //
@@ -67,10 +67,6 @@ function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   fillHitTestBase();
 }
-document.getElementById('clear').addEventListener('pointerdown', (e) => {
-  clearCanvas();
-  e.currentTarget.blur();
-});
 window.overlayApi.onClear(clearCanvas);
 
 // --- (2) стан малювання -------------------------------------------------
@@ -110,102 +106,21 @@ window.addEventListener('pointercancel', () => {
   drawing = false;
 });
 
-// --- (3) кнопки панелі ---------------------------------------------------
-// pointerdown, а не click — на тачскріні дає миттєву реакцію без затримки
-// на можливий подвійний тап (як і скрізь в основному вікні застосунку).
-document.querySelectorAll('.swatch').forEach((btn) => {
-  btn.addEventListener('pointerdown', (e) => {
-    color = btn.dataset.color;
-    erasing = false;
-    document.getElementById('eraser').classList.remove('active');
-    document.querySelectorAll('.swatch').forEach((b) => b.classList.toggle('active', b === btn));
-    // На тачскріні кнопка інакше лишається візуально "натиснутою"/у фокусі
-    // назавжди — тут немає миші, яка природньо зняла б цей стан.
-    e.currentTarget.blur();
-  });
+// --- (3) команди з панелі ------------------------------------------------
+window.overlayApi.onSetColor((c) => {
+  color = c;
+});
+window.overlayApi.onSetErasing((e) => {
+  erasing = e;
+});
+window.overlayApi.onSetWidth((w) => {
+  baseWidth = w;
 });
 
-document.getElementById('width').addEventListener('input', (e) => {
-  baseWidth = Number(e.target.value);
-});
-
-document.getElementById('eraser').addEventListener('pointerdown', (e) => {
-  erasing = !erasing;
-  e.currentTarget.classList.toggle('active', erasing);
-  e.currentTarget.blur();
-});
-
-document.getElementById('close').addEventListener('pointerdown', () => {
-  window.overlayApi.close();
-});
-
-// --- (4) «пропускати кліки» (click-through) ------------------------------
-// Вікно ignoreMouseEvents діє на все вікно одразу, тож панель інструментів
-// стає теж непроклацуваною. Тому тримаємо панель завжди «живою»: щойно курсор
-// над нею — знімаємо ignore, а поза нею — застосовуємо його, якщо пропуск увімкнено.
-const clickThroughBtn = document.getElementById('click-through');
-
-let passThroughEnabled = false;
-let overToolbar = false;
-let currentIgnore = false;
-
-function applyIgnoreState() {
-  const shouldIgnore = passThroughEnabled && !overToolbar;
-  if (shouldIgnore !== currentIgnore) {
-    currentIgnore = shouldIgnore;
-    window.overlayApi.setIgnoreMouseEvents(shouldIgnore);
-  }
-  // Коли клік дійсно проходить крізь вікно до програми під низом, ОС
-  // намагається показати курсор ТІЄЇ програми, а наш canvas одночасно
-  // нав'язує власний cursor:crosshair — звідси видимий конфлікт/мерехтіння
-  // двох курсорів одночасно. Ховаємо прицільний курсор саме на час
-  // пропускання кліків, лишаючи керування курсором вікну під низом.
-  canvas.style.cursor = shouldIgnore ? 'default' : 'crosshair';
-}
-
-function setPassThrough(next) {
-  passThroughEnabled = next;
-  clickThroughBtn.classList.toggle('active', passThroughEnabled);
-  applyIgnoreState();
-}
-
-clickThroughBtn.addEventListener('pointerdown', () => {
-  overToolbar = true;
-  setPassThrough(!passThroughEnabled);
-});
-
-window.overlayApi.onForceTogglePassThrough(() => setPassThrough(!passThroughEnabled));
-
-// pointermove, а не mousemove — щоб перевірка "чи курсор над панеллю"
-// однаково рахувалась і для пера/тача, а не лише для миші.
-document.addEventListener('pointermove', (e) => {
-  const rect = toolbar.getBoundingClientRect();
-  const inside =
-    e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
-  if (inside !== overToolbar) {
-    overToolbar = inside;
-    applyIgnoreState();
-  }
-});
-
-// --- (5) перетягування панелі --------------------------------------------
-const dragHandle = toolbar.querySelector('.drag-handle');
-let draggingToolbar = false;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
-
-dragHandle.addEventListener('pointerdown', (e) => {
-  draggingToolbar = true;
-  dragOffsetX = e.clientX - toolbar.offsetLeft;
-  dragOffsetY = e.clientY - toolbar.offsetTop;
-});
-
-window.addEventListener('pointermove', (e) => {
-  if (!draggingToolbar) return;
-  toolbar.style.left = `${e.clientX - dragOffsetX}px`;
-  toolbar.style.top = `${e.clientY - dragOffsetY}px`;
-});
-
-window.addEventListener('pointerup', () => {
-  draggingToolbar = false;
+// Коли клік дійсно проходить крізь вікно до програми під низом, ОС намагається
+// показати курсор ТІЄЇ програми, а наш canvas одночасно нав'язує власний
+// cursor:crosshair — звідси видимий конфлікт/мерехтіння двох курсорів
+// одночасно. Ховаємо прицільний курсор саме на час пропускання кліків.
+window.overlayApi.onPassThroughChanged((enabled) => {
+  canvas.style.cursor = enabled ? 'default' : 'crosshair';
 });

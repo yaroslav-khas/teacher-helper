@@ -83,9 +83,12 @@ function createShellWindow(): void {
   // на своєму місці, але фактичний хіт-тест був би зсунутий. Особливо
   // помітно на тачскріні, де дотик жорсткіше мапиться на абсолютні
   // координати екрана, ніж курсор миші.
-  const refreshOverlayBounds = () => reassertOverlayVisibility(getShellDisplayBounds(shellWindow));
-  shellWindow.on('enter-full-screen', refreshOverlayBounds);
-  shellWindow.on('leave-full-screen', refreshOverlayBounds);
+  const refreshOverlayBounds = (source: string) => {
+    logLine('OVERLAY', `shellWindow подія '${source}', межі shellWindow=${JSON.stringify(shellWindow?.getBounds())}`);
+    reassertOverlayVisibility(getShellDisplayBounds(shellWindow));
+  };
+  shellWindow.on('enter-full-screen', () => refreshOverlayBounds('enter-full-screen'));
+  shellWindow.on('leave-full-screen', () => refreshOverlayBounds('leave-full-screen'));
 
   shellWindow.on('closed', () => {
     shellWindow = null;

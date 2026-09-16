@@ -154,6 +154,7 @@ window.renderFileLibrary = async function renderFileLibrary(container, config) {
       nameEl.textContent = entry.name;
 
       tile.appendChild(nameEl);
+      tile.title = entry.name;
       tile.addEventListener('click', () => {
         if (entry.isDirectory) {
           state.current = entry.fullPath;

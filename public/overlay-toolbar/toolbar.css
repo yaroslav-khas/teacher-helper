@@ -1,0 +1,80 @@
+/* Це вікно НЕПРОЗОРЕ (transparent:false в BrowserWindow) — свідомо, щоб
+   уникнути Windows-бага з альфа-хіт-тестом прозорих вікон, який роками
+   мучив кнопки, коли вони жили в одному вікні з прозорим полотном. Тому й
+   фон тут суцільний, без напівпрозорості. */
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #14161a;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 10px;
+  font-family: system-ui, sans-serif;
+  box-sizing: border-box;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #aaa;
+  padding: 0 4px;
+  font-size: 20px;
+  /* Нативне перетягування вікна ОС замість ручного стеження за pointermove —
+     набагато надійніше на тачскріні (немає жодного власного JS-коду, який
+     міг би "загубити" дотик посеред перетягування). */
+  -webkit-app-region: drag;
+}
+
+.toolbar button,
+#width {
+  -webkit-app-region: no-drag;
+}
+
+.toolbar button {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #262a33;
+  color: white;
+  font-size: 18px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Лише для реальної миші — на тачскріні :hover не має "відпускання",
+   тож без цієї умови кнопка лишалась би підсвіченою назавжди після дотику. */
+@media (hover: hover) {
+  .toolbar button:hover {
+    background: #323744;
+  }
+}
+
+.toolbar button.active {
+  border-color: #4c8dff;
+}
+
+/* 40x40, як інші кнопки тулбару (а не 28px, як було) — на тачскріні палець
+   набагато менш точний за курсор миші: у меншому колі часто "промахувались"
+   повз кружечок по фону панелі поруч, і перемикання кольору не спрацьовувало,
+   хоча мишею той самий клік завжди влучав. */
+.swatch {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+
+.swatch.active {
+  border-color: white;
+}
+
+#width {
+  width: 90px;
+}
