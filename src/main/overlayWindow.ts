@@ -24,15 +24,45 @@ let canvasWindow: BrowserWindow | null = null;
 let toolbarWindow: BrowserWindow | null = null;
 let passThroughEnabled = false;
 
-// Різні рівні always-on-top (не однаковий 'screen-saver' для обох) — це
-// апаратна гарантія на рівні ОС: вікно вищого рівня ЗАВЖДИ малюється поверх
-// вікна нижчого рівня, незалежно від того, яке з них щойно отримало фокус чи
-// клік. Спроба покладатись на однаковий рівень + moveTop()-після-focus не
-// спрацювала надійно: клік по canvasWindow (початок штриха) активує його на
-// рівні ОС і той піднімався над toolbarWindow ще до того, як наш moveTop()
-// встигав відпрацювати, ховаючи всю панель кнопок аж до хрестика закриття.
-const CANVAS_LEVEL = 'floating';
+// Обидва вікна мусять бути на НАЙВИЩОМУ рівні 'screen-saver' — це той самий
+// рівень, який потрібен canvasWindow, щоб узагалі малюватись поверх
+// справжнього OS-фулскріну (спроба знизити його до 'floating', щоб тулбар
+// природньо був "вищим", зламала показ малюнку саме в фулскріні: канвас
+// ставав невидимим над презентацією/відео на весь екран і з'являвся знову
+// лише після виходу з фулскріну). Оскільки 'screen-saver' — це стеля
+// Electron API (вище рівня просто не існує), тулбар підняти НАД канвасом
+// рівнем неможливо — тому порядок серед двох вікон одного рівня підтримуємо
+// активним перевстановленням (moveTopoolbarKeepOnTop нижче), а не статичною
+// різницею рівнів.
+const CANVAS_LEVEL = 'screen-saver';
 const TOOLBAR_LEVEL = 'screen-saver';
+
+// Клік по canvasWindow (початок штриха) активує його на рівні ОС, і серед
+// двох вікон ОДНАКОВОГО рівня always-on-top ОС візуально піднімає щойно
+// активоване — тобто канвас ліз би поверх тулбару, ховаючи й роблячи
+// некліковною всю панель кнопок. Одноразового moveTop() по події 'focus'
+// виявилось недостатньо (гонка з тим, як швидко ОС встигає перемалювати
+// порядок), тож тримаємо тулбар нагорі періодичним примусовим moveTop(),
+// поки оверлей активний — дешева операція, і будь-яке "просідання" тулбару
+// самовиправляється щонайбільше за TOOLBAR_KEEP_ON_TOP_MS.
+const TOOLBAR_KEEP_ON_TOP_MS = 300;
+let toolbarKeepOnTopTimer: NodeJS.Timeout | null = null;
+
+function startToolbarKeepOnTop(): void {
+  if (toolbarKeepOnTopTimer) return;
+  toolbarKeepOnTopTimer = setInterval(() => {
+    if (toolbarWindow && !toolbarWindow.isDestroyed() && toolbarWindow.isVisible()) {
+      toolbarWindow.moveTop();
+    }
+  }, TOOLBAR_KEEP_ON_TOP_MS);
+}
+
+function stopToolbarKeepOnTop(): void {
+  if (toolbarKeepOnTopTimer) {
+    clearInterval(toolbarKeepOnTopTimer);
+    toolbarKeepOnTopTimer = null;
+  }
+}
 
 function sendToCanvas(channel: string, ...args: unknown[]): void {
   if (canvasWindow && !canvasWindow.isDestroyed()) {
@@ -129,6 +159,8 @@ function createToolbarWindow(displayBounds: Electron.Rectangle): BrowserWindow {
 }
 
 export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
+  startToolbarKeepOnTop();
+
   if (!toolbarWindow || toolbarWindow.isDestroyed()) {
     toolbarWindow = createToolbarWindow(bounds);
   } else {
@@ -186,9 +218,9 @@ export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
     toolbarWindow?.moveTop();
   });
 
-  // Страхувальний захід понад CANVAS_LEVEL/TOOLBAR_LEVEL вище: якщо на
-  // якійсь платформі різниця рівнів усе ж не тримається бездоганно, зайвий
-  // moveTop() тулбару після кожної активації полотна не зашкодить.
+  // Миттєва реакція між "тіками" startToolbarKeepOnTop() вище — на
+  // активацію canvasWindow (початок штриха) не варто чекати навіть
+  // TOOLBAR_KEEP_ON_TOP_MS, якщо можна підняти тулбар одразу.
   canvasWindow.on('focus', () => {
     toolbarWindow?.moveTop();
   });
@@ -205,6 +237,7 @@ export function showOverlayWindow(bounds: Electron.Rectangle): BrowserWindow {
 
 export function hideOverlayWindow(): void {
   globalShortcut.unregister(CLICK_THROUGH_SHORTCUT);
+  stopToolbarKeepOnTop();
   // Малюнок стирається щоразу, як оверлей ховається — інакше стара анотація
   // з попереднього контексту (наприклад, з презентації) несподівано випливає
   // поверх зовсім іншої програми наступного разу, коли оверлей знову покажуть.
@@ -217,6 +250,7 @@ export function hideOverlayWindow(): void {
 // повному завершенні застосунку його треба саме закрити, а не сховати.
 export function destroyOverlayWindow(): void {
   globalShortcut.unregister(CLICK_THROUGH_SHORTCUT);
+  stopToolbarKeepOnTop();
   if (canvasWindow && !canvasWindow.isDestroyed()) canvasWindow.destroy();
   if (toolbarWindow && !toolbarWindow.isDestroyed()) toolbarWindow.destroy();
   canvasWindow = null;
