@@ -1545,3 +1545,631 @@ body.web-fullscreen .pptx-rail {
   color: #34c759;
   font-weight: 800;
 }
+
+/* =====================================================================
+   Харчування
+   ===================================================================== */
+
+.meals-pairing {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.meals-pairing-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.meals-pairing-card h2 {
+  margin: 0;
+}
+
+.meals-pairing-card p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.meals-pairing-card input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 0.08em;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--btn-bg);
+  color: inherit;
+}
+
+.meals-pairing-card input#meals-pair-label {
+  letter-spacing: normal;
+  text-align: left;
+  font-size: 14px;
+}
+
+.meals-pairing-status {
+  min-height: 18px;
+  font-size: 13px;
+  color: #ff6b6b;
+}
+
+.meals-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.meals-subnav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.meals-tab {
+  background: var(--btn-bg);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .meals-tab:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.meals-tab.active {
+  border-color: var(--accent);
+}
+
+.meals-teacher-name {
+  margin-left: auto;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.meals-view-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+}
+
+.meals-inline-error {
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid #ff3b30;
+  color: #ff6b6b;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.meals-loading,
+.meals-empty {
+  opacity: 0.6;
+  padding: 16px;
+  text-align: center;
+}
+
+.meals-error {
+  color: #ff6b6b;
+  padding: 16px;
+  text-align: center;
+}
+
+/* --- День --- */
+.meals-day-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.meals-date-nav,
+.meals-today-btn {
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 6px 12px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+@media (hover: hover) {
+  .meals-date-nav:hover,
+  .meals-today-btn:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.meals-date-label {
+  font-size: 15px;
+  font-weight: 600;
+  min-width: 160px;
+  text-align: center;
+}
+
+.meals-day-totals {
+  margin-left: auto;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.meals-day-table-wrap {
+  overflow-x: auto;
+}
+
+.meals-day-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  font-size: 14px;
+}
+
+.meals-day-table th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  padding: 0 10px 4px;
+}
+
+.meals-day-table td {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.meals-day-table tr td:first-child {
+  border-left: 1px solid var(--border);
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.meals-day-table tr td:last-child {
+  border-right: 1px solid var(--border);
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.meals-col-num {
+  width: 32px;
+  opacity: 0.6;
+}
+
+.meals-col-name {
+  min-width: 180px;
+}
+
+.meals-col-check {
+  text-align: center;
+  width: 40px;
+}
+
+.meals-col-check input {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+.meals-mark {
+  font-weight: 700;
+  text-align: center;
+}
+
+.meals-amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meals-presets {
+  display: flex;
+  gap: 4px;
+}
+
+.meals-presets button {
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .meals-presets button:hover {
+    background: var(--surface-hover);
+  }
+}
+
+.meals-row-saving {
+  opacity: 0.5;
+}
+
+/* --- Баланси --- */
+.meals-balances-header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.meals-balances-header .settings-btn {
+  flex: none;
+  padding: 8px 16px;
+}
+
+.meals-balances-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meals-balance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 15px;
+  text-align: left;
+}
+
+@media (hover: hover) {
+  .meals-balance-row:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+  }
+}
+
+.meals-balance-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.meals-negative {
+  color: #ff6b6b;
+}
+
+/* --- Картка учня --- */
+.meals-pupil-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.meals-pupil-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.meals-pupil-balance {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.meals-pupil-header .settings-btn {
+  margin-left: auto;
+  flex: none;
+  padding: 8px 16px;
+}
+
+.meals-ledger-section {
+  margin-bottom: 20px;
+}
+
+.meals-ledger-section h3 {
+  font-size: 14px;
+  opacity: 0.7;
+  margin: 0 0 8px;
+}
+
+.meals-ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.meals-ledger-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.meals-row-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.meals-icon-btn-small {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.7;
+  padding: 2px 4px;
+}
+
+@media (hover: hover) {
+  .meals-icon-btn-small:hover {
+    opacity: 1;
+  }
+}
+
+.meals-batch-badge {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* --- Учні й тариф --- */
+.meals-settings-section {
+  margin-bottom: 28px;
+}
+
+.meals-settings-section h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+
+.meals-prices-form {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.meals-prices-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.meals-prices-form input {
+  width: 90px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--btn-bg);
+  color: inherit;
+  font-size: 14px;
+}
+
+.meals-prices-form .settings-btn {
+  flex: none;
+  padding: 9px 16px;
+}
+
+.meals-prices-meta {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.meals-pupils-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.meals-pupil-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.meals-pupil-row-name {
+  flex: 1;
+}
+
+.meals-pupil-inactive {
+  opacity: 0.55;
+}
+
+.meals-pupil-badge {
+  font-size: 11px;
+  background: var(--btn-bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+  opacity: 0.8;
+}
+
+.meals-add-pupil-row {
+  display: flex;
+  gap: 8px;
+}
+
+.meals-add-pupil-row input {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--btn-bg);
+  color: inherit;
+  font-size: 14px;
+}
+
+.meals-add-pupil-row .settings-btn {
+  flex: none;
+  padding: 9px 16px;
+}
+
+/* --- модальні форми (поповнення/списання/учні/тариф) --- */
+.meals-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.meals-modal-card {
+  width: 100%;
+  max-width: 420px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+}
+
+.meals-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.meals-modal-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.meals-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.meals-modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.meals-modal-body input,
+.meals-modal-body select {
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--btn-bg);
+  color: inherit;
+  font-size: 14px;
+}
+
+.meals-modal-subject {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.meals-modal-hint {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.meals-checkbox-list-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: -4px;
+}
+
+.meals-checkbox-list-actions button {
+  background: var(--btn-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Двоколонково — з класом на 25-30 учнів однією колонкою довелось би
+   забагато гортати всередині й так тісної модалки. */
+.meals-checkbox-list {
+  max-height: 320px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+/* Специфічність саме через батьківський клас — без цього загальне правило
+   ".meals-modal-body label { flex-direction: column }" (для звичайних полів
+   форми) переважало б і тут, і чекбокс опинявся б НАД іменем замість поруч
+   із ним. */
+.meals-checkbox-list .meals-checkbox-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.meals-checkbox-row input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.meals-modal-status {
+  min-height: 16px;
+  font-size: 13px;
+  color: #ff6b6b;
+}
+
+.meals-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.meals-modal-actions .settings-btn {
+  flex: 1;
+}

@@ -58,6 +58,7 @@ window.boardModes = {
 
       const tiles = [
         { id: 'schedule', icon: '🗓️', label: 'Розклад' },
+        { id: 'meals', icon: '🍲', label: 'Харчування' },
         { id: 'web', icon: '🌐', label: 'Веб' },
         { id: 'media', icon: '▶️', label: 'Медіа' },
         { id: 'presentation', icon: '📊', label: 'Презентація' },
