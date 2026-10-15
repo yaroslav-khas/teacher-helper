@@ -70,6 +70,10 @@
     ],
   };
 
+  // Підпис до перерви після відповідного уроку (індекс з нуля) — як на
+  // паперовому "Режимі роботи 2 класи": "15 хв. (сніданок)".
+  const BREAK_LABELS = { 1: 'сніданок' };
+
   // Додатковий час поруч з предметом — виводиться в дужках дрібним шрифтом
   // (напр. "10:00–10:30"). Ключ — "День-номерУрока" (з нуля), як у нотаток.
   // Приклад: 'Понеділок-1': '10:00–10:30'
@@ -270,6 +274,23 @@
         });
 
         tbody.appendChild(row);
+
+        // Перерва після уроку — тривалість рахується з часів уроків, тож
+        // завжди збігається з таблицею "Режим роботи".
+        const cur = parseRange(times[period]);
+        const nxt = period < 7 ? parseRange(times[period + 1]) : null;
+        if (cur.end != null && nxt && nxt.start != null && nxt.start > cur.end) {
+          const label = BREAK_LABELS[period];
+          const breakRow = document.createElement('tr');
+          breakRow.className = 'schedule-break-row';
+          breakRow.dataset.afterPeriod = String(period);
+          breakRow.innerHTML = `
+            <td colspan="${DAYS.length + 1}">
+              ☕ ${nxt.start - cur.end} хв.${label ? ` <span class="schedule-extra">(${label})</span>` : ''}
+            </td>
+          `;
+          tbody.appendChild(breakRow);
+        }
       }
 
       // Підсвічуємо сьогоднішній день і "живий" урок/перерву, і оновлюємо
@@ -288,6 +309,12 @@
             !status.onBreak &&
             String(status.periodIndex) === cell.dataset.period;
           cell.classList.toggle('schedule-cell-current', isCurrent);
+        });
+        container.querySelectorAll('.schedule-break-row').forEach((br) => {
+          br.classList.toggle(
+            'schedule-break-current',
+            status.dayName != null && status.onBreak && String(status.afterPeriodIndex) === br.dataset.afterPeriod,
+          );
         });
         container.querySelectorAll('.schedule-time-cell').forEach((tc) => {
           const row = tc.closest('tr');

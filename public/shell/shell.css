@@ -1384,6 +1384,21 @@ body.web-fullscreen .pptx-rail {
   line-height: 1.3;
 }
 
+.schedule-table .schedule-break-row td {
+  padding: 2px 12px;
+  font-size: 11px;
+  text-align: center;
+  color: var(--text);
+  opacity: 0.8;
+  border-style: dashed;
+  border-radius: 6px;
+}
+
+.schedule-table .schedule-break-row.schedule-break-current td {
+  border-color: var(--accent, currentColor);
+  font-weight: 600;
+}
+
 .schedule-extra {
   font-size: 0.72em;
   font-weight: 400;
