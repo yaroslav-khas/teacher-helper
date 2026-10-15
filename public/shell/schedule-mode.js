@@ -70,6 +70,11 @@
     ],
   };
 
+  // Додатковий час поруч з предметом — виводиться в дужках дрібним шрифтом
+  // (напр. "10:00–10:30"). Ключ — "День-номерУрока" (з нуля), як у нотаток.
+  // Приклад: 'Понеділок-1': '10:00–10:30'
+  const DEFAULT_EXTRAS = {};
+
   // Те саме кольорове кодування, що й на паперовому розкладі — тримає
   // таблицю однаково легкою для сприйняття з відстані дошки.
   function subjectColorClass(text) {
@@ -236,13 +241,14 @@
           const text = (subjects[day] && subjects[day][period]) || '';
           const key = `${day}-${period}`;
           const hasNote = Boolean(notes[key]);
+          const extra = DEFAULT_EXTRAS[key];
 
           const cell = document.createElement('td');
           cell.className = `schedule-cell ${subjectColorClass(text)}`;
           cell.dataset.day = day;
           cell.dataset.period = String(period);
           cell.innerHTML = `
-            <div class="schedule-subject">${text}</div>
+            <div class="schedule-subject">${text}${extra ? ` <span class="schedule-extra">(${extra})</span>` : ''}</div>
             <button class="schedule-note-btn${hasNote ? ' has-note' : ''}" title="Нотатка до уроку">🗨️</button>
             <textarea class="schedule-note-box" placeholder="Нотатка…" hidden>${notes[key] ?? ''}</textarea>
           `;
